@@ -37,9 +37,19 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    
+    'rest_framework', # Add Django REST Framework for building APIs
+    'rest_framework_simplejwt', # Add Simple JWT for handling JWT authentication
+    'corsheaders', # Add CORS headers to allow cross-origin requests from the frontend
+    'django_filters', # Add Django Filters for filtering querysets in the API
+    
+    'articles', # Add the articles app to manage article-related functionality
+    'users', # Add the users app to manage user-related functionality
+    'interactions', # Add the interactions app to manage user interactions with articles (bookmarks, notes, etc.)
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware', # Add CORS middleware at the top to ensure it runs before other middleware
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -121,3 +131,39 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+from datetime import timedelta
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication', # Use JWT for authentication
+    ),
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',     # Allow read-only access for unauthenticated users
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 10, # Set a default page size for pagination
+    'DEFAULT_FILTER_BACKENDS': [
+        'rest_framework.filters.SearchFilter', # Enable search functionality
+        'rest_framework.filters.OrderingFilter', # Enable ordering functionality
+    ],
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1), # Set access token lifetime to 1 hour
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7), # Set refresh token lifetime to 7 days
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'AUTH_HEADER_TYPES': ('Bearer',), 
+}
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000", # Allow requests from localhost:3000 (React development server)
+    "http://localhost:5173", # Allow requests from localhost:5173 (Vite development server)
+    "http://127.0.0.1:3000",  
+    "http://127.0.0.1:5173", 
+]
+
+CORS_ALLOW_CREDENTIALS = True
+
+AUTH_USER_MODEL = 'users.CustomUser'
