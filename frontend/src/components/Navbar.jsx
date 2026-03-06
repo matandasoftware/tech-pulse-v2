@@ -1,23 +1,85 @@
+/**
+ * Navbar Component
+ * 
+ * Main navigation bar with:
+ * - Logo/brand
+ * - Navigation links (Home, Bookmarks)
+ * - Dark mode toggle
+ * - User info and logout
+ */
+
 import { useAuth } from '../context/AuthContext';
 import { useDarkMode } from '../context/DarkModeContext';
+import { Link, useLocation } from 'react-router-dom';
 
 function Navbar() {
     const { user, logout } = useAuth();
     const { darkMode, toggleDarkMode } = useDarkMode();
+    const location = useLocation();
+
+    /**
+     * Check if a route is currently active
+     * @param {string} path - Route path to check
+     * @returns {boolean} True if current route matches
+     */
+    const isActive = (path) => location.pathname === path;
 
     return (
         <nav className="bg-white dark:bg-gray-800 shadow-lg transition-colors duration-200">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center h-16">
-                    {/* Logo */}
-                    <div className="flex-shrink-0">
-                        <h1 className="text-2xl font-bold text-primary-600 dark:text-primary-400">
-                            Tech Pulse
-                        </h1>
+
+                    {/* Left side - Logo and Navigation Links */}
+                    <div className="flex items-center space-x-8">
+                        {/* Logo */}
+                        <Link to="/" className="flex-shrink-0">
+                            <h1 className="text-2xl font-bold text-primary-600 dark:text-primary-400">
+                                Tech Pulse
+                            </h1>
+                        </Link>
+
+                        {/* Navigation Links */}
+                        <div className="hidden md:flex space-x-4">
+                            {/* Home Link */}
+                            <Link
+                                to="/"
+                                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive('/')
+                                        ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
+                                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                    }`}
+                            >
+                                Home
+                            </Link>
+
+                            {/* Bookmarks Link */}
+                            <Link
+                                to="/bookmarks"
+                                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center ${isActive('/bookmarks')
+                                        ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
+                                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                    }`}
+                            >
+                                <svg
+                                    className="w-4 h-4 mr-1.5"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
+                                    />
+                                </svg>
+                                Bookmarks
+                            </Link>
+                        </div>
                     </div>
 
-                    {/* Right side - User info and actions */}
+                    {/* Right side - Dark mode toggle, User info, Logout */}
                     <div className="flex items-center space-x-4">
+
                         {/* Dark Mode Toggle */}
                         <button
                             onClick={toggleDarkMode}
@@ -25,7 +87,7 @@ function Navbar() {
                             aria-label="Toggle dark mode"
                         >
                             {darkMode ? (
-                                // Sun icon (light mode)
+                                // Sun icon for light mode
                                 <svg
                                     className="w-5 h-5 text-yellow-500"
                                     fill="none"
@@ -40,7 +102,7 @@ function Navbar() {
                                     />
                                 </svg>
                             ) : (
-                                // Moon icon (dark mode)
+                                // Moon icon for dark mode
                                 <svg
                                     className="w-5 h-5 text-gray-700"
                                     fill="none"
@@ -57,14 +119,13 @@ function Navbar() {
                             )}
                         </button>
 
-                        {/* User info */}
+                        {/* User info and logout */}
                         {user && (
                             <div className="flex items-center space-x-3">
-                                <span className="text-gray-700 dark:text-gray-300">
+                                <span className="text-gray-700 dark:text-gray-300 hidden sm:inline">
                                     👤 {user.username}
                                 </span>
 
-                                {/* Logout button */}
                                 <button
                                     onClick={logout}
                                     className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition duration-200"

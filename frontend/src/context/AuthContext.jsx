@@ -23,7 +23,7 @@ export const AuthProvider = ({ children }) => {
         const token = localStorage.getItem('access_token');
         if (token) {
             try {
-                const response = await api.get('/users/me/');
+                const response = await api.get('/auth/me/');
                 setUser(response.data);
             } catch (error) {
                 console.error('Auth check failed:', error);
@@ -35,7 +35,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     const login = async (username, password) => {
-        const response = await api.post('/users/token/', { username, password });
+        const response = await api.post('/auth/token/', { username, password });
 
         // Django returns nested structure: { user: {...}, tokens: {...} }
         const { access, refresh } = response.data.tokens;
@@ -43,12 +43,12 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('access_token', access);
         localStorage.setItem('refresh_token', refresh);
 
-        const userResponse = await api.get('/users/me/');
+        const userResponse = await api.get('/auth/me/');
         setUser(userResponse.data);
     };
 
     const register = async (username, email, password, confirmPassword) => {
-        const response = await api.post('/users/register/', {
+        const response = await api.post('/auth/register/', {
             username,
             email,
             password,

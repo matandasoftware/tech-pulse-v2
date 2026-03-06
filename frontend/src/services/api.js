@@ -7,7 +7,6 @@ const api = axios.create({
     },
 });
 
-// Request interceptor - Add auth token to requests
 api.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('access_token');
@@ -21,7 +20,6 @@ api.interceptors.request.use(
     }
 );
 
-// Response interceptor - Handle token refresh
 api.interceptors.response.use(
     (response) => {
         return response;
@@ -29,7 +27,6 @@ api.interceptors.response.use(
     async (error) => {
         const originalRequest = error.config;
 
-        // If 401 error and we haven't tried to refresh yet
         if (error.response?.status === 401 && !originalRequest._retry) {
             originalRequest._retry = true;
 
@@ -40,20 +37,17 @@ api.interceptors.response.use(
                     throw new Error('No refresh token');
                 }
 
-                // Try to refresh the token
                 const response = await axios.post(
-                    'http://127.0.0.1:8000/api/users/token/refresh/',
+                    'http://127.0.0.1:8000/api/auth/token/refresh/',
                     { refresh: refreshToken }
                 );
 
                 const { access } = response.data;
                 localStorage.setItem('access_token', access);
 
-                // Retry original request with new token
                 originalRequest.headers.Authorization = `Bearer ${access}`;
                 return api(originalRequest);
             } catch (refreshError) {
-                // Refresh failed - logout user
                 localStorage.removeItem('access_token');
                 localStorage.removeItem('refresh_token');
                 window.location.href = '/login';
@@ -64,5 +58,20 @@ api.interceptors.response.use(
         return Promise.reject(error);
     }
 );
+
+export const toggleBookmark = async (articleId) => {
+    const response = await api.post(`/articles/${articleId}/bookmark/`);
+    return response.data;
+};
+
+export const getBookmarks = async () => {
+    const response = await api.get('/bookmarks/');
+    return response.data;
+};
+
+export const deleteBookmark = async (bookmarkId) => {
+    const response = await api.delete(`/bookmarks/${bookmarkId}/`);
+    return response.data;
+};
 
 export default api;

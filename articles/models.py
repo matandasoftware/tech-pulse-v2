@@ -7,6 +7,7 @@ and categorization system.
 
 from django.db import models
 from django.utils import timezone
+from django.utils.text import slugify
 
 
 class Category(models.Model):
@@ -18,6 +19,7 @@ class Category(models.Model):
     
     Attributes:
         name (CharField): Category name (unique)
+        slug (SlugField): URL-friendly version of name
         description (TextField): Detailed category description
         created_at (DateTimeField): Category creation timestamp
     """
@@ -26,6 +28,13 @@ class Category(models.Model):
         max_length=100,
         unique=True,
         help_text="Category name (e.g., 'Artificial Intelligence')"
+    )
+    
+    slug = models.SlugField(
+        max_length=100,
+        unique=True,
+        blank=True,
+        help_text="URL-friendly version of name"
     )
     
     description = models.TextField(
@@ -43,6 +52,12 @@ class Category(models.Model):
         
         verbose_name_plural = 'Categories'
         ordering = ['name']
+    
+    def save(self, *args, **kwargs):
+        """Auto-generate slug from name if not provided."""
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
     
     def __str__(self):
         """
@@ -63,6 +78,7 @@ class Source(models.Model):
     
     Attributes:
         name (CharField): Source name (e.g., 'TechCrunch')
+        slug (SlugField): URL-friendly version of name
         url (URLField): RSS feed URL (unique)
         source_type (CharField): Type of source (RSS, API, manual)
         description (TextField): Source description
@@ -81,6 +97,13 @@ class Source(models.Model):
     name = models.CharField(
         max_length=200,
         help_text="Name of the news source"
+    )
+    
+    slug = models.SlugField(
+        max_length=200,
+        unique=True,
+        blank=True,
+        help_text="URL-friendly version of name"
     )
     
     url = models.URLField(
@@ -126,6 +149,12 @@ class Source(models.Model):
         
         ordering = ['name']
     
+    def save(self, *args, **kwargs):
+        """Auto-generate slug from name if not provided."""
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+    
     def __str__(self):
         """
         Return string representation of source.
@@ -145,6 +174,7 @@ class Article(models.Model):
     
     Attributes:
         title (CharField): Article headline
+        slug (SlugField): URL-friendly version of title
         content (TextField): Full article content
         summary (TextField): Short summary/excerpt
         url (URLField): Original article URL (unique)
@@ -162,6 +192,13 @@ class Article(models.Model):
     title = models.CharField(
         max_length=500,
         help_text="Article headline"
+    )
+    
+    slug = models.SlugField(
+        max_length=500,
+        unique=True,
+        blank=True,
+        help_text="URL-friendly version of title"
     )
     
     content = models.TextField(
@@ -242,6 +279,18 @@ class Article(models.Model):
             models.Index(fields=['source']),
         ]
     
+    def save(self, *args, **kwargs):
+        """Auto-generate slug from title if not provided."""
+        if not self.slug:
+            base_slug = slugify(self.title)[:450]  # Leave room for uniqueness suffix
+            slug = base_slug
+            counter = 1
+            while Article.objects.filter(slug=slug).exists():
+                slug = f"{base_slug}-{counter}"
+                counter += 1
+            self.slug = slug
+        super().save(*args, **kwargs)
+    
     def __str__(self):
         """
         Return string representation of article.
@@ -260,3 +309,43 @@ class Article(models.Model):
         """
         self.view_count += 1
         self.save(update_fields=['view_count'])
+
+class Bookmark(models.Model):
+    """Links users to articles they want to save for later reading.
+    
+    Ensures each user can only bookmark an article once using unique_together.
+    Bookmarks are ordered by creation date (newest first).
+    """
+    
+    user = models.ForeignKey(
+        'users.CustomUser',
+        on_delete=models.CASCADE,
+        related_name='bookmarks',  # Enables: user.bookmarks.all()
+        help_text="User who created this bookmark"
+    )
+    
+    article = models.ForeignKey(
+        'Article',
+        on_delete=models.CASCADE,
+        related_name='bookmarked_by',  # Enables: article.bookmarked_by.count()
+        help_text="Article being bookmarked"
+    )
+    
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        help_text="When bookmark was created"
+    )
+
+    class Meta:
+        # Prevents duplicate bookmarks at database level (better than app-level checks for race conditions)
+        unique_together = ('user', 'article')
+        
+        ordering = ['-created_at']
+        
+        # Optimizes common query: user.bookmarks.all().order_by('-created_at')
+        indexes = [
+            models.Index(fields=['user', '-created_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.user.username} → {self.article.title}"
