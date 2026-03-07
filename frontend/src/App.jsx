@@ -17,6 +17,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import BookmarksPage from './pages/BookmarksPage';
 import NotesPage from './pages/NotesPage';
+import ProfilePage from './pages/ProfilePage';
 
 function App() {
     return (
@@ -77,6 +78,19 @@ function App() {
                                             <>
                                                 <Navbar />
                                                 <DashboardPage />
+                                            </>
+                                        </ProtectedRoute>
+                                    }
+                                />
+
+                                {/* Profile */}
+                                <Route
+                                    path="/profile"
+                                    element={
+                                        <ProtectedRoute>
+                                            <>
+                                                <Navbar />
+                                                <ProfilePage />
                                             </>
                                         </ProtectedRoute>
                                     }

@@ -99,6 +99,17 @@ function Navbar() {
                             >
                                 Dashboard
                             </Link>
+
+                            {/* PROFILE LINK */}
+                            <Link
+                                to="/profile"
+                                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive('/profile')
+                                        ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
+                                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                    }`}
+                            >
+                                Profile
+                            </Link>
                         </div>
                     </div>
 

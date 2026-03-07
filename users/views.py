@@ -11,7 +11,9 @@ from .models import CustomUser
 from .serializers import (
     UserSerializer,
     UserRegistrationSerializer,
-    UserUpdateSerializer
+    UserUpdateSerializer,
+    UserProfileSerializer,
+    ChangePasswordSerializer
 )
 
 
@@ -86,24 +88,52 @@ class UserLoginView(APIView):
 
 class UserProfileView(generics.RetrieveUpdateAPIView):
     """
-    Get or update user profile.
-    
-    GET /api/users/profile/
-    PATCH /api/users/profile/
+    Get or update user profile with statistics.
+
+    GET /api/users/me/
+    PATCH /api/users/me/
     """
-    
-    serializer_class = UserUpdateSerializer
+
+    serializer_class = UserProfileSerializer
     permission_classes = [permissions.IsAuthenticated]
-    
+
     def get_object(self):
-        """Return current authenticated user."""
+        """Return the current authenticated user."""
         return self.request.user
-    
-    def retrieve(self, request, *args, **kwargs):
-        """Get user profile with full details."""
-        instance = self.get_object()
-        serializer = UserSerializer(instance)
-        return Response(serializer.data)
+
+
+class ChangePasswordView(APIView):
+    """
+    Change user password.
+
+    POST /api/users/change-password/
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        serializer = ChangePasswordSerializer(data=request.data)
+
+        if serializer.is_valid():
+            user = request.user
+
+            # Check old password
+            if not user.check_password(serializer.validated_data['old_password']):
+                return Response(
+                    {'detail': 'Old password is incorrect.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Set new password
+            user.set_password(serializer.validated_data['new_password'])
+            user.save()
+
+            return Response(
+                {'detail': 'Password changed successfully.'},
+                status=status.HTTP_200_OK
+            )
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserLogoutView(APIView):
