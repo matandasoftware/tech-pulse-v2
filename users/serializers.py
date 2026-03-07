@@ -5,6 +5,8 @@ Serializers for users app.
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
 from django.db import models
+from django.utils import timezone
+from datetime import date
 from .models import CustomUser
 from interactions.models import UserArticle, Note, ReadingHistory
 
@@ -126,6 +128,9 @@ class UserProfileSerializer(serializers.ModelSerializer):
     total_articles_read = serializers.SerializerMethodField()
     total_reading_time = serializers.SerializerMethodField()
     pending_followups = serializers.SerializerMethodField()
+    overdue_followups = serializers.SerializerMethodField()
+    due_today_followups = serializers.SerializerMethodField()
+    upcoming_followups = serializers.SerializerMethodField()
 
     class Meta:
         model = CustomUser
@@ -135,14 +140,17 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'email',
             'first_name',
             'last_name',
-            'date_joined',
+            'created_at',
             'total_bookmarks',
             'total_notes',
             'total_articles_read',
             'total_reading_time',
             'pending_followups',
+            'overdue_followups',
+            'due_today_followups',
+            'upcoming_followups',
         ]
-        read_only_fields = ['id', 'username', 'date_joined']
+        read_only_fields = ['id', 'username', 'created_at']
 
     def get_total_bookmarks(self, obj):
         """Get count of bookmarked articles."""
@@ -164,11 +172,41 @@ class UserProfileSerializer(serializers.ModelSerializer):
         return total or 0
 
     def get_pending_followups(self, obj):
-        """Get count of notes with pending follow-ups."""
+        """Get count of notes with pending follow-ups (total)."""
         return Note.objects.filter(
             user=obj,
             has_follow_up=True,
             follow_up_done=False
+        ).count()
+
+    def get_overdue_followups(self, obj):
+        """Get count of overdue follow-ups (past the due date)."""
+        today = date.today()
+        return Note.objects.filter(
+            user=obj,
+            has_follow_up=True,
+            follow_up_done=False,
+            follow_up_date__lt=today
+        ).count()
+
+    def get_due_today_followups(self, obj):
+        """Get count of follow-ups due today."""
+        today = date.today()
+        return Note.objects.filter(
+            user=obj,
+            has_follow_up=True,
+            follow_up_done=False,
+            follow_up_date=today
+        ).count()
+
+    def get_upcoming_followups(self, obj):
+        """Get count of upcoming follow-ups (future dates)."""
+        today = date.today()
+        return Note.objects.filter(
+            user=obj,
+            has_follow_up=True,
+            follow_up_done=False,
+            follow_up_date__gt=today
         ).count()
 
 

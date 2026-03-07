@@ -77,21 +77,10 @@ class BookmarkedArticlesView(generics.ListAPIView):
 
     def get_queryset(self):
         """Return only bookmarked articles."""
-        import sys
-        queryset = UserArticle.objects.filter(
+        return UserArticle.objects.filter(
             user=self.request.user,
             is_bookmarked=True
         ).select_related('article__source', 'article__category').order_by('-bookmarked_at')
-
-        # DEBUG LOG with flush
-        print(f"\n🔍 BookmarkedArticlesView queryset:", file=sys.stderr, flush=True)
-        print(f"   User: {self.request.user.username}", file=sys.stderr, flush=True)
-        print(f"   Count: {queryset.count()}", file=sys.stderr, flush=True)
-        for ua in queryset:
-            print(f"   - Article {ua.article.id}: {ua.article.title[:40]}", file=sys.stderr, flush=True)
-            print(f"     is_bookmarked: {ua.is_bookmarked}, bookmarked_at: {ua.bookmarked_at}", file=sys.stderr, flush=True)
-
-        return queryset
 
     def list(self, request, *args, **kwargs):
         """Override list to disable caching."""
@@ -141,24 +130,29 @@ class SavedForLaterView(generics.ListAPIView):
 class NoteListView(generics.ListCreateAPIView):
     """
     List user's notes or create new note.
-    
+
     GET /api/notes/
     POST /api/notes/
     """
-    
+
     serializer_class = NoteSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['has_follow_up', 'follow_up_done', 'article']
+    filterset_fields = ['has_follow_up', 'follow_up_done']
     search_fields = ['content']
     ordering_fields = ['created_at', 'updated_at', 'follow_up_date']
     ordering = ['-created_at']
-    
+
     def get_queryset(self):
         """Return only current user's notes."""
-        return Note.objects.filter(
-            user=self.request.user
-        ).select_related('article__source', 'article__category')
+        queryset = Note.objects.filter(user=self.request.user)
+
+        # Filter by article_id if provided (for fetching notes in panel)
+        article_id = self.request.query_params.get('article_id')
+        if article_id:
+            queryset = queryset.filter(article_id=article_id)
+
+        return queryset.select_related('article__source', 'article__category')
     
     def perform_create(self, serializer):
         """Set user to current authenticated user."""
@@ -285,7 +279,7 @@ class ReadingHistoryDetailView(generics.RetrieveUpdateDestroyAPIView):
             user=self.request.user
         ).select_related('article__source', 'article__category')
 
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Sum
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -341,6 +335,11 @@ def dashboard_stats(request):
     total_articles = UserArticle.objects.filter(
         user=user
     ).values('article').distinct().count()
+
+    # Total reading time
+    total_reading_time = ReadingHistory.objects.filter(user=user).aggregate(
+        total=Sum('time_spent')
+    )['total'] or 0
     
     # Top sources (by note count)
     top_sources = Note.objects.filter(
@@ -390,6 +389,22 @@ def dashboard_stats(request):
         follow_up_done=False,
         follow_up_date__lt=today
     ).count()
+
+    # Due today follow-ups
+    due_today_followups = Note.objects.filter(
+        user=user,
+        has_follow_up=True,
+        follow_up_done=False,
+        follow_up_date=today
+    ).count()
+
+    # Upcoming follow-ups count (future dates)
+    upcoming_followups_count = Note.objects.filter(
+        user=user,
+        has_follow_up=True,
+        follow_up_done=False,
+        follow_up_date__gt=today
+    ).count()
     
     # Serialize upcoming follow-ups
     upcoming_followups_data = [
@@ -411,9 +426,12 @@ def dashboard_stats(request):
             'pending_followups': pending_followups,
             'completed_followups': completed_followups,
             'overdue_followups': overdue_followups,
+            'due_today_followups': due_today_followups,
+            'upcoming_followups': upcoming_followups_count,
             'reviewed_notes': reviewed_notes,
             'unreviewed_notes': unreviewed_notes,
         },
+        'total_reading_time': total_reading_time,
         'top_sources': [
             {
                 'name': item['article__source__name'],

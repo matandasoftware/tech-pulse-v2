@@ -161,12 +161,12 @@ class NoteSerializer(serializers.ModelSerializer):
             'follow_up_date',
             'is_pending_followup',
             'is_reviewed',
-            'external_link',        # ✅ ADDED
-            'external_links',       # ✅ ADDED
+            'external_link',
+            'external_links',
             'created_at',
             'updated_at'
         ]
-        read_only_fields = ['id', 'user', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'user', 'created_at', 'updated_at', 'is_pending_followup']
 
 
 class ArticleReferenceSerializer(serializers.ModelSerializer):

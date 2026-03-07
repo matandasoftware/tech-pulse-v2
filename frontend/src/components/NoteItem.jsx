@@ -1,229 +1,142 @@
 /**
  * NoteItem Component
  * 
- * Displays a single note card with metadata, content, and action buttons.
+ * Displays a single note with beautiful styling and full features.
  * 
  * Features:
- * - Shows note content with reviewed and follow-up status
- * - Displays article title and metadata (source, category, date)
- * - Action buttons: Edit, Mark as Reviewed, Mark Follow-up Done, Delete
- * - External reference links
- * - Article title is clickable (opens in new tab)
- * - Note content is NOT clickable (prevents accidental navigation)
+ * - Color-coded status badges
+ * - Multiple external links display
+ * - Reviewed status
+ * - Follow-up tracking
+ * - Edit/Delete actions
  */
 
 import { useState } from 'react';
-import { format } from 'date-fns';
 import api from '../services/api';
 
-function NoteItem({ note, onUpdate, onDelete, onEdit, compact = false }) {
-    const [deleting, setDeleting] = useState(false);
-    const [updating, setUpdating] = useState(false);
-
-    /**
-     * Handle marking note as reviewed/unreviewed
-     * Toggles the is_reviewed status
-     */
-    const handleToggleReviewed = async (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-
-        if (updating) return;
-
-        setUpdating(true);
-
-        try {
-            const response = await api.patch(`/notes/${note.id}/`, {
-                is_reviewed: !note.is_reviewed
-            });
-
-            // Notify parent component of update
-            if (onUpdate) {
-                onUpdate(note.id, response.data);
-            }
-        } catch (err) {
-            console.error('Error updating note:', err);
-            alert('Failed to update note');
-        } finally {
-            setUpdating(false);
-        }
-    };
-
-    /**
-     * Handle marking follow-up as done/undone
-     * Toggles the follow_up_done status
-     */
-    const handleToggleFollowUp = async (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-
-        if (updating) return;
-
-        setUpdating(true);
-
-        try {
-            const response = await api.patch(`/notes/${note.id}/`, {
-                follow_up_done: !note.follow_up_done
-            });
-
-            // Notify parent component of update
-            if (onUpdate) {
-                onUpdate(note.id, response.data);
-            }
-        } catch (err) {
-            console.error('Error updating note:', err);
-            alert('Failed to update note');
-        } finally {
-            setUpdating(false);
-        }
-    };
-
-    /**
-     * Handle note deletion
-     * Shows confirmation before deleting
-     */
-    const handleDelete = async (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-
-        if (deleting) return;
-
-        if (!window.confirm('Are you sure you want to delete this note?')) {
-            return;
-        }
-
-        setDeleting(true);
-
-        try {
-            await api.delete(`/notes/${note.id}/`);
-
-            // Notify parent component of deletion
-            if (onDelete) {
-                onDelete(note.id);
-            }
-        } catch (err) {
-            console.error('Error deleting note:', err);
-            alert('Failed to delete note');
-        } finally {
-            setDeleting(false);
-        }
-    };
-
-    /**
-     * Handle edit button click
-     */
-    const handleEdit = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-
-        if (onEdit) {
-            onEdit(note);
-        }
-    };
+function NoteItem({ note, onEdit, onDelete }) {
+    const [markingDone, setMarkingDone] = useState(false);
+    const [togglingReview, setTogglingReview] = useState(false);
 
     /**
      * Format date to readable string
-     * 
-     * @param {string} dateString - ISO date string
-     * @returns {string} Formatted date (e.g., "Mar 6, 2026 7:35 PM")
      */
     const formatDate = (dateString) => {
+        if (!dateString) return '';
+        return new Date(dateString).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    };
+
+    /**
+     * Format date (short version)
+     */
+    const formatDateShort = (dateString) => {
+        if (!dateString) return '';
+        return new Date(dateString).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
+        });
+    };
+
+    /**
+     * Handle mark follow-up as done
+     */
+    const handleMarkDone = async () => {
+        setMarkingDone(true);
+
         try {
-            return format(new Date(dateString), 'MMM d, yyyy h:mm a');
-        } catch {
-            return dateString;
+            await api.patch(`/notes/${note.id}/`, {
+                follow_up_done: true
+            });
+            window.location.reload(); // Reload to refresh notes
+        } catch (err) {
+            console.error('Mark done error:', err);
+            alert('Failed to mark follow-up as done');
+        } finally {
+            setMarkingDone(false);
         }
     };
 
     /**
-     * Format follow-up date
-     * 
-     * @param {string} dateString - ISO date string
-     * @returns {string} Formatted date (e.g., "Mar 7, 2026")
+     * Handle toggle reviewed status
      */
-    const formatFollowUpDate = (dateString) => {
+    const handleToggleReview = async () => {
+        setTogglingReview(true);
+
         try {
-            return format(new Date(dateString), 'MMM d, yyyy');
-        } catch {
-            return dateString;
+            await api.patch(`/notes/${note.id}/`, {
+                is_reviewed: !note.is_reviewed
+            });
+            window.location.reload(); // Reload to refresh notes
+        } catch (err) {
+            console.error('Toggle review error:', err);
+            alert('Failed to update review status');
+        } finally {
+            setTogglingReview(false);
+        }
+    };
+
+    /**
+     * Handle delete note
+     */
+    const handleDelete = async () => {
+        if (!confirm('Are you sure you want to delete this note?')) return;
+
+        try {
+            await api.delete(`/notes/${note.id}/`);
+            onDelete(note.id);
+        } catch (err) {
+            console.error('Delete error:', err);
+            alert('Failed to delete note');
         }
     };
 
     return (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow">
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border-2 border-gray-200 dark:border-gray-700 shadow-md hover:shadow-lg transition-all">
 
-            {/* Article Title and Metadata - CLICKABLE */}
-            <div className="mb-3">
-                <a
-                    href={note.article?.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg p-2 -m-2 transition-colors"
-                >
-                    <h3 className="font-semibold text-gray-900 dark:text-white mb-2 line-clamp-2 hover:text-primary-600 dark:hover:text-primary-400">
-                        📰 {note.article?.title || 'Article'}
-                    </h3>
-
-                    {/* Metadata Badges */}
-                    {!compact && (
-                        <div className="flex flex-wrap gap-2 text-xs">
-                            {/* Source Badge */}
-                            {note.article?.source && (
-                                <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded">
-                                    {note.article.source.name}
-                                </span>
-                            )}
-
-                            {/* Category Badge */}
-                            {note.article?.category && (
-                                <span className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded">
-                                    {note.article.category.name}
-                                </span>
-                            )}
-                        </div>
-                    )}
-                </a>
-            </div>
-
-            {/* Note Content - NOT CLICKABLE */}
-            <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 mb-3">
-                <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
-                    💬 {note.content}
-                </p>
-            </div>
-
-            {/* Status Badges */}
-            <div className="space-y-2 mb-3">
+            {/* Status Badges Row */}
+            <div className="flex flex-wrap gap-2 mb-4">
                 {/* Reviewed Badge */}
                 {note.is_reviewed && (
-                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
-                        <span className="text-sm">
-                            ✓ Reviewed
-                        </span>
-                    </div>
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-300 dark:border-green-700">
+                        ✅ Reviewed
+                    </span>
                 )}
 
                 {/* Follow-up Badge */}
                 {note.has_follow_up && (
-                    <div className={`flex items-center gap-2 px-3 py-2 rounded-lg ${note.follow_up_done
-                            ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300'
-                            : 'bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300'
+                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border ${note.follow_up_done
+                            ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700'
+                            : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border-yellow-300 dark:border-yellow-700'
                         }`}>
-                        <span className="text-sm">
-                            {note.follow_up_done ? '✅' : '⏰'} Follow-up: {formatFollowUpDate(note.follow_up_date)}
-                        </span>
-                        {note.follow_up_done && (
-                            <span className="text-xs font-semibold">DONE</span>
-                        )}
-                    </div>
+                        {note.follow_up_done ? '✅ Follow-up Done' : '⏳ Pending Follow-up'}
+                    </span>
+                )}
+
+                {/* Follow-up Date */}
+                {note.has_follow_up && note.follow_up_date && !note.follow_up_done && (
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border border-orange-300 dark:border-orange-700">
+                        📅 Due: {formatDateShort(note.follow_up_date)}
+                    </span>
                 )}
             </div>
 
-            {/* External Reference Links */}
+            {/* Note Content */}
+            <p className="text-gray-900 dark:text-white mb-4 whitespace-pre-wrap leading-relaxed">
+                {note.content}
+            </p>
+
+            {/* External Links */}
             {note.external_links && note.external_links.length > 0 && (
-                <div className="mb-3">
-                    <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">
-                        🔗 References:
+                <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <p className="text-xs font-semibold text-blue-700 dark:text-blue-300 mb-2">
+                        🔗 External References:
                     </p>
                     <div className="space-y-1">
                         {note.external_links.map((link, index) => (
@@ -232,71 +145,59 @@ function NoteItem({ note, onUpdate, onDelete, onEdit, compact = false }) {
                                 href={link}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="block text-xs text-primary-600 dark:text-primary-400 hover:underline truncate"
-                                onClick={(e) => e.stopPropagation()}
+                                className="block text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline truncate"
                             >
-                                {link}
+                                • {link}
                             </a>
                         ))}
                     </div>
                 </div>
             )}
 
-            {/* Timestamp */}
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-                🕒 {formatDate(note.created_at)}
-            </p>
-
-            {/* Action Buttons */}
-            <div className="flex flex-wrap gap-2">
-
-                {/* Edit Button */}
-                {onEdit && (
-                    <button
-                        type="button"
-                        onClick={handleEdit}
-                        className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                    >
-                        Edit
-                    </button>
+            {/* Meta Info */}
+            <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-4 pt-3 border-t border-gray-200 dark:border-gray-700">
+                <span>📅 Created: {formatDate(note.created_at)}</span>
+                {note.updated_at !== note.created_at && (
+                    <span>✏️ Updated: {formatDate(note.updated_at)}</span>
                 )}
+            </div>
 
-                {/* Mark as Reviewed / Unreviewed Button */}
+            {/* Quick Actions */}
+            {note.has_follow_up && !note.follow_up_done && (
+                <div className="mb-3">
+                    <button
+                        onClick={handleMarkDone}
+                        disabled={markingDone}
+                        className="w-full px-3 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50"
+                    >
+                        {markingDone ? '⏳ Marking...' : '✅ Mark Follow-up as Done'}
+                    </button>
+                </div>
+            )}
+
+            {/* Actions Row */}
+            <div className="flex gap-2">
                 <button
-                    type="button"
-                    onClick={handleToggleReviewed}
-                    disabled={updating}
-                    className={`px-3 py-1.5 text-sm rounded-lg transition-colors disabled:opacity-50 ${note.is_reviewed
-                            ? 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-500'
-                            : 'bg-purple-600 text-white hover:bg-purple-700'
+                    onClick={() => onEdit(note)}
+                    className="flex-1 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                >
+                    ✏️ Edit
+                </button>
+                <button
+                    onClick={handleToggleReview}
+                    disabled={togglingReview}
+                    className={`flex-1 px-4 py-2 text-sm rounded-lg transition-colors font-medium ${note.is_reviewed
+                            ? 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                            : 'bg-green-600 text-white hover:bg-green-700'
                         }`}
                 >
-                    {updating ? 'Updating...' : (note.is_reviewed ? 'Mark Unreviewed' : 'Mark as Reviewed')}
+                    {togglingReview ? '...' : (note.is_reviewed ? '↩️ Unreviewed' : '✅ Reviewed')}
                 </button>
-
-                {/* Mark Follow-up Done / Pending Button (only if has follow-up) */}
-                {note.has_follow_up && (
-                    <button
-                        type="button"
-                        onClick={handleToggleFollowUp}
-                        disabled={updating}
-                        className={`px-3 py-1.5 text-sm rounded-lg transition-colors disabled:opacity-50 ${note.follow_up_done
-                                ? 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-500'
-                                : 'bg-green-600 text-white hover:bg-green-700'
-                            }`}
-                    >
-                        {updating ? 'Updating...' : (note.follow_up_done ? 'Mark Pending' : 'Mark Follow-up Done')}
-                    </button>
-                )}
-
-                {/* Delete Button */}
                 <button
-                    type="button"
                     onClick={handleDelete}
-                    disabled={deleting}
-                    className="px-3 py-1.5 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors"
+                    className="px-4 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
                 >
-                    {deleting ? 'Deleting...' : 'Delete'}
+                    🗑️
                 </button>
             </div>
         </div>

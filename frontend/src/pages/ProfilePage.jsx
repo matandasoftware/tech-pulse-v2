@@ -282,7 +282,7 @@ function ProfilePage() {
                             <div>
                                 <p className="text-sm text-gray-500 dark:text-gray-400">Member Since</p>
                                 <p className="text-lg font-medium text-gray-900 dark:text-white">
-                                    {formatDate(profile?.date_joined)}
+                                    {formatDate(profile?.created_at)}
                                 </p>
                             </div>
                         </div>
@@ -295,52 +295,133 @@ function ProfilePage() {
                         Reading Statistics
                     </h2>
 
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-                        <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                            <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {/* Bookmarks */}
+                        <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border-2 border-blue-200 dark:border-blue-800">
+                            <p className="text-4xl font-bold text-blue-600 dark:text-blue-400">
                                 {profile?.total_bookmarks || 0}
                             </p>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                                Bookmarks
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 font-medium">
+                                📚 Bookmarks
                             </p>
                         </div>
 
-                        <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                            <p className="text-3xl font-bold text-green-600 dark:text-green-400">
+                        {/* Notes */}
+                        <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border-2 border-green-200 dark:border-green-800">
+                            <p className="text-4xl font-bold text-green-600 dark:text-green-400">
                                 {profile?.total_notes || 0}
                             </p>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                                Notes
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 font-medium">
+                                📝 Notes
                             </p>
                         </div>
 
-                        <div className="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-                            <p className="text-3xl font-bold text-purple-600 dark:text-purple-400">
+                        {/* Articles Read */}
+                        <div className="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border-2 border-purple-200 dark:border-purple-800">
+                            <p className="text-4xl font-bold text-purple-600 dark:text-purple-400">
                                 {profile?.total_articles_read || 0}
                             </p>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                                Articles Read
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 font-medium">
+                                📖 Articles Read
                             </p>
                         </div>
 
-                        <div className="text-center p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
-                            <p className="text-3xl font-bold text-yellow-600 dark:text-yellow-400">
+                        {/* Reading Time */}
+                        <div className="text-center p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border-2 border-yellow-200 dark:border-yellow-800">
+                            <p className="text-4xl font-bold text-yellow-600 dark:text-yellow-400">
                                 {formatReadingTime(profile?.total_reading_time || 0)}
                             </p>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                                Reading Time
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 font-medium">
+                                ⏱️ Reading Time
                             </p>
                         </div>
 
-                        <div className="text-center p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                            <p className="text-3xl font-bold text-red-600 dark:text-red-400">
+                        {/* Total Pending Follow-ups */}
+                        <div className="text-center p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg border-2 border-orange-200 dark:border-orange-800">
+                            <p className="text-4xl font-bold text-orange-600 dark:text-orange-400">
                                 {profile?.pending_followups || 0}
                             </p>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                                Pending Follow-ups
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 font-medium">
+                                ⏳ Total Follow-ups
                             </p>
                         </div>
                     </div>
+
+                    {/* Follow-up Breakdown - Only show if there are pending follow-ups */}
+                    {profile && profile.pending_followups > 0 && (
+                        <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+                                📋 Follow-up Breakdown
+                            </h3>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                {/* Overdue */}
+                                <div className="flex items-center justify-between p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border-l-4 border-red-500">
+                                    <div>
+                                        <p className="text-2xl font-bold text-red-600 dark:text-red-400">
+                                            {profile?.overdue_followups || 0}
+                                        </p>
+                                        <p className="text-xs text-red-700 dark:text-red-300 font-medium mt-1">
+                                            🔥 Overdue
+                                        </p>
+                                    </div>
+                                    {profile.overdue_followups > 0 && (
+                                        <div className="w-10 h-10 bg-red-500 rounded-full flex items-center justify-center animate-pulse">
+                                            <span className="text-white text-lg">!</span>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Due Today */}
+                                <div className="flex items-center justify-between p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border-l-4 border-yellow-500">
+                                    <div>
+                                        <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
+                                            {profile?.due_today_followups || 0}
+                                        </p>
+                                        <p className="text-xs text-yellow-700 dark:text-yellow-300 font-medium mt-1">
+                                            ⏰ Due Today
+                                        </p>
+                                    </div>
+                                    {profile.due_today_followups > 0 && (
+                                        <div className="w-10 h-10 bg-yellow-500 rounded-full flex items-center justify-center">
+                                            <span className="text-white text-lg">📅</span>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Upcoming */}
+                                <div className="flex items-center justify-between p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border-l-4 border-blue-500">
+                                    <div>
+                                        <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                                            {profile?.upcoming_followups || 0}
+                                        </p>
+                                        <p className="text-xs text-blue-700 dark:text-blue-300 font-medium mt-1">
+                                            📅 Upcoming
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Alert for overdue items */}
+                            {profile.overdue_followups > 0 && (
+                                <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-800 rounded-lg">
+                                    <p className="text-sm text-red-700 dark:text-red-400 font-medium">
+                                        ⚠️ You have <strong>{profile.overdue_followups}</strong> overdue follow-up{profile.overdue_followups > 1 ? 's' : ''}. 
+                                        Consider reviewing them soon!
+                                    </p>
+                                </div>
+                            )}
+
+                            {/* Alert for due today */}
+                            {profile.due_today_followups > 0 && (
+                                <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-300 dark:border-yellow-800 rounded-lg">
+                                    <p className="text-sm text-yellow-700 dark:text-yellow-400 font-medium">
+                                        📌 You have <strong>{profile.due_today_followups}</strong> follow-up{profile.due_today_followups > 1 ? 's' : ''} due today!
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
 
                 {/* Change Password Card */}

@@ -12,6 +12,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import api from '../services/api';
 
 function DashboardPage() {
@@ -43,6 +44,17 @@ function DashboardPage() {
         } finally {
             setLoading(false);
         }
+    };
+
+    /**
+     * Format reading time
+     */
+    const formatReadingTime = (seconds) => {
+        if (seconds < 60) return `${seconds}s`;
+        const minutes = Math.floor(seconds / 60);
+        if (minutes < 60) return `${minutes}m`;
+        const hours = Math.floor(minutes / 60);
+        return `${hours}h ${minutes % 60}m`;
     };
 
     /**
@@ -100,65 +112,125 @@ function DashboardPage() {
             {!loading && !error && stats && (
                 <div className="space-y-8">
 
-                    {/* Key Metrics Grid */}
+                    {/* Main Stats Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 
-                        {/* Total Articles */}
-                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
-                            <div className="flex items-center justify-between mb-2">
-                                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                    Articles
-                                </h3>
-                                <span className="text-2xl">📰</span>
+                        {/* Bookmarks */}
+                        <Link
+                            to="/bookmarks"
+                            className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 hover:shadow-xl transition-shadow border-l-4 border-blue-500"
+                        >
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
+                                        {stats?.counts?.total_bookmarks || 0}
+                                    </p>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 font-medium">
+                                        📚 Bookmarks
+                                    </p>
+                                </div>
+                                <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+                                    <span className="text-2xl">📚</span>
+                                </div>
                             </div>
-                            <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                                {stats.counts.total_articles}
-                            </p>
+                        </Link>
+
+                        {/* Notes */}
+                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border-l-4 border-green-500">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-3xl font-bold text-green-600 dark:text-green-400">
+                                        {stats?.counts?.total_notes || 0}
+                                    </p>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 font-medium">
+                                        📝 Notes
+                                    </p>
+                                </div>
+                                <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
+                                    <span className="text-2xl">📝</span>
+                                </div>
+                            </div>
                         </div>
 
-                        {/* Total Notes */}
-                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
-                            <div className="flex items-center justify-between mb-2">
-                                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                    Notes
-                                </h3>
-                                <span className="text-2xl">📝</span>
+                        {/* Articles Read */}
+                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border-l-4 border-purple-500">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-3xl font-bold text-purple-600 dark:text-purple-400">
+                                        {stats?.counts?.total_articles || 0}
+                                    </p>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 font-medium">
+                                        📖 Articles Read
+                                    </p>
+                                </div>
+                                <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center">
+                                    <span className="text-2xl">📖</span>
+                                </div>
                             </div>
-                            <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                                {stats.counts.total_notes}
-                            </p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                {stats.counts.reviewed_notes} reviewed
-                            </p>
                         </div>
 
-                        {/* Total Bookmarks */}
-                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
-                            <div className="flex items-center justify-between mb-2">
-                                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                    Bookmarks
-                                </h3>
-                                <span className="text-2xl">🔖</span>
+                        {/* Reading Time */}
+                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border-l-4 border-yellow-500">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-3xl font-bold text-yellow-600 dark:text-yellow-400">
+                                        {formatReadingTime(stats?.total_reading_time || 0)}
+                                    </p>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 font-medium">
+                                        ⏱️ Reading Time
+                                    </p>
+                                </div>
+                                <div className="w-12 h-12 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center">
+                                    <span className="text-2xl">⏱️</span>
+                                </div>
                             </div>
-                            <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                                {stats.counts.total_bookmarks}
-                            </p>
                         </div>
 
-                        {/* Pending Follow-ups */}
-                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
-                            <div className="flex items-center justify-between mb-2">
-                                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                    Follow-ups
-                                </h3>
-                                <span className="text-2xl">⏰</span>
+                        {/* PENDING FOLLOW-UPS WITH BREAKDOWN INSIDE */}
+                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border-l-4 border-orange-500">
+                            <div className="flex items-center justify-between mb-4">
+                                <div>
+                                    <p className="text-3xl font-bold text-orange-600 dark:text-orange-400">
+                                        {stats?.counts?.pending_followups || 0}
+                                    </p>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 font-medium">
+                                        ⏳ Pending Follow-ups
+                                    </p>
+                                </div>
+                                <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center">
+                                    <span className="text-2xl">⏳</span>
+                                </div>
                             </div>
-                            <p className="text-3xl font-bold text-orange-600 dark:text-orange-400">
-                                {stats.counts.pending_followups}
-                            </p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                {stats.counts.overdue_followups} overdue
-                            </p>
+
+                            {/* Breakdown Inside Card */}
+                            {stats && stats.counts.pending_followups > 0 && (
+                                <div className="pt-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
+                                    <div className="flex items-center justify-between text-sm">
+                                        <span className="text-red-600 dark:text-red-400 font-medium">
+                                            🔥 Overdue
+                                        </span>
+                                        <span className="text-red-700 dark:text-red-300 font-bold">
+                                            {stats?.counts?.overdue_followups || 0}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center justify-between text-sm">
+                                        <span className="text-yellow-600 dark:text-yellow-400 font-medium">
+                                            ⏰ Due Today
+                                        </span>
+                                        <span className="text-yellow-700 dark:text-yellow-300 font-bold">
+                                            {stats?.counts?.due_today_followups || 0}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center justify-between text-sm">
+                                        <span className="text-blue-600 dark:text-blue-400 font-medium">
+                                            📅 Upcoming
+                                        </span>
+                                        <span className="text-blue-700 dark:text-blue-300 font-bold">
+                                            {stats?.counts?.upcoming_followups || 0}
+                                        </span>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                     </div>
@@ -227,35 +299,6 @@ function DashboardPage() {
                         </div>
 
                     </div>
-
-                    {/* Upcoming Follow-ups */}
-                    {stats.upcoming_followups.length > 0 && (
-                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                                ⏰ Upcoming Follow-ups
-                            </h3>
-                            <div className="space-y-3">
-                                {stats.upcoming_followups.map((followup) => (
-                                    <div
-                                        key={followup.id}
-                                        className="flex items-start justify-between p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg"
-                                    >
-                                        <div className="flex-1">
-                                            <p className="text-sm font-medium text-gray-900 dark:text-white mb-1">
-                                                {followup.content}
-                                            </p>
-                                            <p className="text-xs text-gray-600 dark:text-gray-400">
-                                                📰 {followup.article_title}
-                                            </p>
-                                        </div>
-                                        <span className="text-xs font-semibold text-orange-700 dark:text-orange-300 whitespace-nowrap ml-4">
-                                            {formatDate(followup.follow_up_date)}
-                                        </span>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
 
                 </div>
             )}

@@ -7,9 +7,11 @@
  * The component re-renders whenever location.pathname changes.
  */
 
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useDarkMode } from '../context/DarkModeContext';
 import { Link, useLocation } from 'react-router-dom';
+import api from '../services/api';
 
 function Navbar() {
     // Get current user and logout function from Auth context
@@ -20,6 +22,25 @@ function Navbar() {
 
     // Get current URL location - this updates when route changes
     const location = useLocation();
+
+    // Track overdue follow-ups count
+    const [overdueCount, setOverdueCount] = useState(0);
+
+    /**
+     * Fetch overdue follow-ups count on mount
+     */
+    useEffect(() => {
+        const fetchOverdueCount = async () => {
+            try {
+                const response = await api.get('/auth/profile/');
+                setOverdueCount(response.data.overdue_followups || 0);
+            } catch (err) {
+                console.error('Failed to fetch overdue count:', err);
+            }
+        };
+
+        fetchOverdueCount();
+    }, []);
 
     /**
      * Check if a route is currently active
@@ -103,12 +124,17 @@ function Navbar() {
                             {/* PROFILE LINK */}
                             <Link
                                 to="/profile"
-                                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive('/profile')
+                                className={`relative px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive('/profile')
                                         ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
                                         : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                                     }`}
                             >
                                 Profile
+                                {overdueCount > 0 && (
+                                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
+                                        {overdueCount}
+                                    </span>
+                                )}
                             </Link>
                         </div>
                     </div>
