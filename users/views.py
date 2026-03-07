@@ -5,7 +5,7 @@ Views for users app.
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
 from .models import CustomUser
 from .serializers import (
@@ -18,73 +18,69 @@ from .serializers import (
 class UserRegistrationView(generics.CreateAPIView):
     """
     User registration endpoint.
-    
-    POST /api/users/register/
+
+    POST /api/auth/register/
     """
-    
+
     queryset = CustomUser.objects.all()
     serializer_class = UserRegistrationSerializer
     permission_classes = [permissions.AllowAny]
-    
+
     def create(self, request, *args, **kwargs):
-        """Create user and return tokens."""
+        """Create user and return token."""
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
-        
-        refresh = RefreshToken.for_user(user)
-        
+
+        # Create token for new user
+        token = Token.objects.create(user=user)
+
         return Response({
+            'token': token.key,
             'user': UserSerializer(user).data,
-            'tokens': {
-                'refresh': str(refresh),
-                'access': str(refresh.access_token),
-            }
         }, status=status.HTTP_201_CREATED)
 
 
 class UserLoginView(APIView):
     """
     User login endpoint.
-    
-    POST /api/users/login/
+
+    POST /api/auth/token/
     """
-    
+
     permission_classes = [permissions.AllowAny]
-    
+
     def post(self, request):
-        """Authenticate user and return tokens."""
+        """Authenticate user and return token."""
         username = request.data.get('username')
         password = request.data.get('password')
-        
+
         if not username or not password:
             return Response(
-                {'error': 'Please provide both username and password'},
+                {'detail': 'Please provide both username and password'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
+
         user = authenticate(username=username, password=password)
-        
+
         if not user:
             return Response(
-                {'error': 'Invalid credentials'},
+                {'detail': 'Invalid credentials'},
                 status=status.HTTP_401_UNAUTHORIZED
             )
-        
+
         if not user.is_active:
             return Response(
-                {'error': 'Account is disabled'},
+                {'detail': 'Account is disabled'},
                 status=status.HTTP_401_UNAUTHORIZED
             )
-        
-        refresh = RefreshToken.for_user(user)
-        
+
+        # Get or create token for user
+        token, created = Token.objects.get_or_create(user=user)
+
         return Response({
+            'token': token.key,
             'user': UserSerializer(user).data,
-            'tokens': {
-                'refresh': str(refresh),
-                'access': str(refresh.access_token),
-            }
         })
 
 
@@ -113,19 +109,18 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
 class UserLogoutView(APIView):
     """
     User logout endpoint.
-    
-    POST /api/users/logout/
+
+    POST /api/auth/logout/
     """
-    
+
     permission_classes = [permissions.IsAuthenticated]
-    
+
     def post(self, request):
-        """Blacklist refresh token."""
+        """Delete user's token."""
         try:
-            refresh_token = request.data.get('refresh_token')
-            token = RefreshToken(refresh_token)
-            token.blacklist()
-            
+            # Delete the user's token
+            Token.objects.filter(user=request.user).delete()
+
             return Response(
                 {'message': 'Successfully logged out'},
                 status=status.HTTP_200_OK

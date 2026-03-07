@@ -37,12 +37,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    
+
     'rest_framework', # Add Django REST Framework for building APIs
+    'rest_framework.authtoken', # Add Token authentication
     'rest_framework_simplejwt', # Add Simple JWT for handling JWT authentication
     'corsheaders', # Add CORS headers to allow cross-origin requests from the frontend
     'django_filters', # Add Django Filters for filtering querysets in the API
-    
+
     'articles', # Add the articles app to manage article-related functionality
     'users', # Add the users app to manage user-related functionality
     'interactions', # Add the interactions app to manage user interactions with articles (bookmarks, notes, etc.)
@@ -136,7 +137,7 @@ from datetime import timedelta
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication', # Use JWT for authentication
+        'rest_framework.authentication.TokenAuthentication', # Use Token for authentication
     ),
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticatedOrReadOnly',     # Allow read-only access for unauthenticated users
@@ -167,3 +168,25 @@ CORS_ALLOWED_ORIGINS = [
 CORS_ALLOW_CREDENTIALS = True
 
 AUTH_USER_MODEL = 'users.CustomUser'
+
+# Logging Configuration
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}

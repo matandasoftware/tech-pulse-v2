@@ -2,7 +2,7 @@
  * BookmarksPage Component
  * 
  * Displays all articles bookmarked by the current user.
- * Fetches from /api/bookmarks/ which returns UserArticle objects
+ * Fetches from /api/user-articles/?is_bookmarked=true which returns UserArticle objects
  * where is_bookmarked=True.
  * 
  * Features:
@@ -11,10 +11,12 @@
  * - Loading skeletons
  * - Error handling
  * - Empty state with helpful message
+ * - Notes panel for adding/viewing notes on bookmarked articles
  */
 
 import { useState, useEffect } from 'react';
 import ArticleCard from '../components/ArticleCard';
+import NotesPanel from '../components/NotesPanel';
 import api from '../services/api';
 
 function BookmarksPage() {
@@ -27,18 +29,36 @@ function BookmarksPage() {
      */
     useEffect(() => {
         fetchBookmarks();
+
+        // Listen for bookmark changes from other pages
+        const handleBookmarkUpdate = () => {
+            fetchBookmarks();
+        };
+
+        window.addEventListener('bookmarkUpdated', handleBookmarkUpdate);
+
+        return () => {
+            window.removeEventListener('bookmarkUpdated', handleBookmarkUpdate);
+        };
     }, []);
 
     /**
      * Fetch user's bookmarked articles from API
-     * Calls /api/bookmarks/ which returns UserArticle objects with nested article data
+     * Calls /api/user-articles/?is_bookmarked=true which returns UserArticle objects with nested article data
      */
     const fetchBookmarks = async () => {
         setLoading(true);
         setError(null);
 
         try {
-            const response = await api.get('/bookmarks/');
+            // ✅ FIXED: Fetch from user-articles with is_bookmarked filter
+            const response = await api.get('/user-articles/', {
+                params: {
+                    is_bookmarked: true,
+                    _t: Date.now()
+                }
+            });
+            console.log('📚 Bookmarks fetched:', response.data);
             // Response is paginated: { count: X, results: [...] }
             setBookmarks(response.data.results || response.data);
         } catch (err) {
@@ -130,6 +150,9 @@ function BookmarksPage() {
                     </p>
                 </div>
             )}
+
+            {/* Notes Panel - Slides in from right when opened */}
+            <NotesPanel />
         </div>
     );
 }

@@ -122,10 +122,10 @@ class UserArticle(models.Model):
 
 class Note(models.Model):
     """
-    User note on an article with follow-up tracking.
+    User note on an article with follow-up tracking and external links.
     
-    Allows users to write notes on articles and mark notes that
-    require follow-up action. Tracks completion status.
+    Allows users to write notes on articles, mark notes that require
+    follow-up action, and attach external reference URLs.
     
     Attributes:
         user (ForeignKey): User who wrote the note
@@ -134,6 +134,7 @@ class Note(models.Model):
         has_follow_up (BooleanField): Whether note requires follow-up
         follow_up_done (BooleanField): Whether follow-up is completed
         follow_up_date (DateTimeField): Optional follow-up deadline
+        external_links (JSONField): List of external reference URLs
         created_at (DateTimeField): Note creation timestamp
         updated_at (DateTimeField): Last update timestamp
     """
@@ -172,6 +173,25 @@ class Note(models.Model):
         help_text="Optional deadline for follow-up action"
     )
     
+    external_links = models.JSONField(
+        null=True,
+        blank=True,
+        default=list,
+        help_text="External reference URLs (stored as JSON array)"
+    )
+
+    is_reviewed = models.BooleanField(
+        default=False,
+        help_text="Whether user has reviewed/acknowledged this note"
+    )
+
+    external_link = models.URLField(
+        max_length=500,
+        blank=True,
+        null=True,
+        help_text="Single external reference URL"
+    )
+
     created_at = models.DateTimeField(
         auto_now_add=True,
         help_text="Timestamp when note was created"
@@ -184,11 +204,12 @@ class Note(models.Model):
     
     class Meta:
         """Meta options for Note model."""
-        
+
         ordering = ['-created_at']
         indexes = [
             models.Index(fields=['user', 'article']),
             models.Index(fields=['has_follow_up', 'follow_up_done']),
+            models.Index(fields=['is_reviewed']),
         ]
     
     def __str__(self):
@@ -227,7 +248,7 @@ class ArticleReference(models.Model):
     source_note = models.ForeignKey(
         Note,
         on_delete=models.CASCADE,
-        related_name='references',
+        related_name='article_references',
         help_text="Note that contains this reference"
     )
     

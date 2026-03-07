@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import api from '../services/api';
 
 function LoginPage() {
     const [username, setUsername] = useState('');
@@ -17,10 +18,26 @@ function LoginPage() {
         setLoading(true);
 
         try {
-            await login(username, password);
+            const response = await api.post('/auth/token/', {
+                username,
+                password
+            });
+
+            const { token, user } = response.data;
+
+            localStorage.setItem('token', token);
+            localStorage.setItem('user', JSON.stringify(user));
+
+            login(user);
             navigate('/');
         } catch (err) {
-            setError(err.response?.data?.detail || 'Invalid username or password');
+            // KEEP THE ERROR VISIBLE
+            const errorMsg = err.response?.data?.detail || err.response?.data?.error || err.message || 'Login failed';
+            console.error('❌❌❌ LOGIN ERROR:', errorMsg);
+            console.error('Full error:', err);
+            console.error('Response data:', err.response?.data);
+            setError(errorMsg);
+            alert('ERROR: ' + errorMsg);  // Also show as alert
         } finally {
             setLoading(false);
         }

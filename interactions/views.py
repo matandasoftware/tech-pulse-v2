@@ -68,19 +68,38 @@ class UserArticleDetailView(generics.RetrieveUpdateDestroyAPIView):
 class BookmarkedArticlesView(generics.ListAPIView):
     """
     List user's bookmarked articles.
-    
+
     GET /api/bookmarks/
     """
-    
+
     serializer_class = UserArticleSerializer
     permission_classes = [permissions.IsAuthenticated]
-    
+
     def get_queryset(self):
         """Return only bookmarked articles."""
-        return UserArticle.objects.filter(
+        import sys
+        queryset = UserArticle.objects.filter(
             user=self.request.user,
             is_bookmarked=True
         ).select_related('article__source', 'article__category').order_by('-bookmarked_at')
+
+        # DEBUG LOG with flush
+        print(f"\n🔍 BookmarkedArticlesView queryset:", file=sys.stderr, flush=True)
+        print(f"   User: {self.request.user.username}", file=sys.stderr, flush=True)
+        print(f"   Count: {queryset.count()}", file=sys.stderr, flush=True)
+        for ua in queryset:
+            print(f"   - Article {ua.article.id}: {ua.article.title[:40]}", file=sys.stderr, flush=True)
+            print(f"     is_bookmarked: {ua.is_bookmarked}, bookmarked_at: {ua.bookmarked_at}", file=sys.stderr, flush=True)
+
+        return queryset
+
+    def list(self, request, *args, **kwargs):
+        """Override list to disable caching."""
+        response = super().list(request, *args, **kwargs)
+        response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        response['Pragma'] = 'no-cache'
+        response['Expires'] = '0'
+        return response
 
 
 class ReadArticlesView(generics.ListAPIView):
@@ -265,3 +284,157 @@ class ReadingHistoryDetailView(generics.RetrieveUpdateDestroyAPIView):
         return ReadingHistory.objects.filter(
             user=self.request.user
         ).select_related('article__source', 'article__category')
+
+from django.db.models import Count, Q
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from django.utils import timezone
+from datetime import timedelta
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def dashboard_stats(request):
+    """
+    Get dashboard statistics for the authenticated user.
+    
+    Returns:
+        - Total articles (viewed/interacted with)
+        - Total notes created
+        - Total bookmarks
+        - Pending follow-ups count
+        - Reviewed notes count
+        - Unreviewed notes count
+        - Top 5 sources by note count
+        - Top 5 categories by note count
+        - Notes created in last 30 days (by date)
+        - Upcoming follow-ups (next 7 days)
+    """
+    user = request.user
+    
+    # Basic counts
+    total_notes = Note.objects.filter(user=user).count()
+    total_bookmarks = UserArticle.objects.filter(
+        user=user,
+        is_bookmarked=True
+    ).count()
+    
+    # Notes statistics
+    reviewed_notes = Note.objects.filter(user=user, is_reviewed=True).count()
+    unreviewed_notes = Note.objects.filter(user=user, is_reviewed=False).count()
+    
+    # Follow-up statistics
+    pending_followups = Note.objects.filter(
+        user=user,
+        has_follow_up=True,
+        follow_up_done=False
+    ).count()
+    
+    completed_followups = Note.objects.filter(
+        user=user,
+        has_follow_up=True,
+        follow_up_done=True
+    ).count()
+    
+    # Articles with notes or bookmarks
+    total_articles = UserArticle.objects.filter(
+        user=user
+    ).values('article').distinct().count()
+    
+    # Top sources (by note count)
+    top_sources = Note.objects.filter(
+        user=user
+    ).values(
+        'article__source__name'
+    ).annotate(
+        count=Count('id')
+    ).order_by('-count')[:5]
+    
+    # Top categories (by note count)
+    top_categories = Note.objects.filter(
+        user=user
+    ).values(
+        'article__category__name'
+    ).annotate(
+        count=Count('id')
+    ).order_by('-count')[:5]
+    
+    # Notes timeline (last 30 days)
+    thirty_days_ago = timezone.now() - timedelta(days=30)
+    notes_timeline = Note.objects.filter(
+        user=user,
+        created_at__gte=thirty_days_ago
+    ).extra(
+        select={'date': 'date(created_at)'}
+    ).values('date').annotate(
+        count=Count('id')
+    ).order_by('date')
+    
+    # Upcoming follow-ups (next 7 days)
+    today = timezone.now().date()
+    seven_days_later = today + timedelta(days=7)
+    
+    upcoming_followups = Note.objects.filter(
+        user=user,
+        has_follow_up=True,
+        follow_up_done=False,
+        follow_up_date__gte=today,
+        follow_up_date__lte=seven_days_later
+    ).select_related('article').order_by('follow_up_date')[:10]
+    
+    # Overdue follow-ups
+    overdue_followups = Note.objects.filter(
+        user=user,
+        has_follow_up=True,
+        follow_up_done=False,
+        follow_up_date__lt=today
+    ).count()
+    
+    # Serialize upcoming follow-ups
+    upcoming_followups_data = [
+        {
+            'id': note.id,
+            'content': note.content[:100],  # Truncate to 100 chars
+            'follow_up_date': note.follow_up_date,
+            'article_title': note.article.title,
+            'article_id': note.article.id,
+        }
+        for note in upcoming_followups
+    ]
+    
+    return Response({
+        'counts': {
+            'total_articles': total_articles,
+            'total_notes': total_notes,
+            'total_bookmarks': total_bookmarks,
+            'pending_followups': pending_followups,
+            'completed_followups': completed_followups,
+            'overdue_followups': overdue_followups,
+            'reviewed_notes': reviewed_notes,
+            'unreviewed_notes': unreviewed_notes,
+        },
+        'top_sources': [
+            {
+                'name': item['article__source__name'],
+                'count': item['count']
+            }
+            for item in top_sources if item['article__source__name']
+        ],
+        'top_categories': [
+            {
+                'name': item['article__category__name'],
+                'count': item['count']
+            }
+            for item in top_categories if item['article__category__name']
+        ],
+        'notes_timeline': [
+            {
+                'date': item['date'],
+                'count': item['count']
+            }
+            for item in notes_timeline
+        ],
+        'upcoming_followups': upcoming_followups_data,
+    })
+

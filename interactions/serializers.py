@@ -8,14 +8,16 @@ from articles.serializers import ArticleListSerializer
 
 
 class UserArticleSerializer(serializers.ModelSerializer):
-    """Serializer for UserArticle model."""
+    """
+    Serializer for UserArticle model.
+    Handles user interactions with articles (bookmarks, read status, etc.)
+    """
     
+    # Nested article data for reading
     article = ArticleListSerializer(read_only=True)
-    article_id = serializers.PrimaryKeyRelatedField(
-        queryset=__import__('articles.models', fromlist=['Article']).Article.objects.all(),
-        source='article',
-        write_only=True
-    )
+    
+    # Article ID for writing (creating/updating)
+    article_id = serializers.IntegerField(write_only=True, required=False)
     
     class Meta:
         model = UserArticle
@@ -44,27 +46,95 @@ class UserArticleSerializer(serializers.ModelSerializer):
             'updated_at'
         ]
     
-    def update(self, instance, validated_data):
-        """Update timestamps when status changes."""
+    def create(self, validated_data):
+        """
+        Create or update UserArticle record.
+        Uses get_or_create to avoid duplicates.
+        Automatically manages timestamps based on boolean flags.
+        """
         from django.utils import timezone
-        
-        if 'is_bookmarked' in validated_data:
-            if validated_data['is_bookmarked']:
+
+        # Extract article_id
+        article_id = validated_data.pop('article_id', None)
+
+        # If article field was provided instead of article_id
+        if not article_id and 'article' in validated_data:
+            article_id = validated_data.pop('article').id
+
+        if not article_id:
+            raise serializers.ValidationError({'article': 'Article ID is required'})
+
+        # Get user from context
+        user = validated_data.get('user')
+        if not user:
+            raise serializers.ValidationError({'user': 'User is required'})
+
+        # Get or create UserArticle
+        user_article, created = UserArticle.objects.get_or_create(
+            user=user,
+            article_id=article_id,
+            defaults={}  # Don't set defaults, we'll update below
+        )
+
+        # Update all fields from validated_data
+        for key, value in validated_data.items():
+            setattr(user_article, key, value)
+
+        # Automatically manage timestamps based on boolean flags
+        if user_article.is_bookmarked:
+            if not user_article.bookmarked_at:
+                user_article.bookmarked_at = timezone.now()
+        else:
+            user_article.bookmarked_at = None
+
+        if user_article.is_read:
+            if not user_article.read_at:
+                user_article.read_at = timezone.now()
+        else:
+            user_article.read_at = None
+
+        if user_article.is_saved_for_later:
+            if not user_article.saved_at:
+                user_article.saved_at = timezone.now()
+        else:
+            user_article.saved_at = None
+
+        user_article.save()
+
+        return user_article
+    
+    def update(self, instance, validated_data):
+        """
+        Update UserArticle and automatically manage timestamps.
+        Ensures timestamps are consistent with boolean flags.
+        """
+        from django.utils import timezone
+
+        # Update fields
+        for key, value in validated_data.items():
+            setattr(instance, key, value)
+
+        # Automatically manage timestamps based on boolean flags
+        if instance.is_bookmarked:
+            if not instance.bookmarked_at:
                 instance.bookmarked_at = timezone.now()
-            else:
-                instance.bookmarked_at = None
-        
-        if 'is_read' in validated_data:
-            if validated_data['is_read']:
+        else:
+            instance.bookmarked_at = None
+
+        if instance.is_read:
+            if not instance.read_at:
                 instance.read_at = timezone.now()
-        
-        if 'is_saved_for_later' in validated_data:
-            if validated_data['is_saved_for_later']:
+        else:
+            instance.read_at = None
+
+        if instance.is_saved_for_later:
+            if not instance.saved_at:
                 instance.saved_at = timezone.now()
-            else:
-                instance.saved_at = None
-        
-        return super().update(instance, validated_data)
+        else:
+            instance.saved_at = None
+
+        instance.save()
+        return instance
 
 
 class NoteSerializer(serializers.ModelSerializer):
@@ -90,6 +160,8 @@ class NoteSerializer(serializers.ModelSerializer):
             'follow_up_done',
             'follow_up_date',
             'is_pending_followup',
+            'is_reviewed',
+            'external_link',
             'created_at',
             'updated_at'
         ]

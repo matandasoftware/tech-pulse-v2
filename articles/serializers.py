@@ -106,13 +106,16 @@ class ArticleListSerializer(serializers.ModelSerializer):
         Returns False for anonymous users.
         """
         request = self.context.get('request')
-        
+
         if not request or not request.user.is_authenticated:
             return False
-        
-        return Bookmark.objects.filter(
+
+        # Check UserArticle model instead of old Bookmark model
+        from interactions.models import UserArticle
+        return UserArticle.objects.filter(
             user=request.user,
-            article=obj
+            article=obj,
+            is_bookmarked=True
         ).exists()
 
 class ArticleDetailSerializer(serializers.ModelSerializer):
@@ -156,13 +159,16 @@ class ArticleDetailSerializer(serializers.ModelSerializer):
         Returns False for anonymous users.
         """
         request = self.context.get('request')
-        
+
         if not request or not request.user.is_authenticated:
             return False
-        
-        return Bookmark.objects.filter(
+
+        # Check UserArticle model instead of old Bookmark model
+        from interactions.models import UserArticle
+        return UserArticle.objects.filter(
             user=request.user,
-            article=obj
+            article=obj,
+            is_bookmarked=True
         ).exists()
 
 

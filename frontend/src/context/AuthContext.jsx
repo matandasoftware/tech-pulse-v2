@@ -20,31 +20,24 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     const checkAuth = async () => {
-        const token = localStorage.getItem('access_token');
-        if (token) {
+        const token = localStorage.getItem('token');
+        const storedUser = localStorage.getItem('user');
+
+        if (token && storedUser) {
             try {
-                const response = await api.get('/auth/me/');
-                setUser(response.data);
+                setUser(JSON.parse(storedUser));
             } catch (error) {
                 console.error('Auth check failed:', error);
-                localStorage.removeItem('access_token');
-                localStorage.removeItem('refresh_token');
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
             }
         }
         setLoading(false);
     };
 
-    const login = async (username, password) => {
-        const response = await api.post('/auth/token/', { username, password });
-
-        // Django returns nested structure: { user: {...}, tokens: {...} }
-        const { access, refresh } = response.data.tokens;
-
-        localStorage.setItem('access_token', access);
-        localStorage.setItem('refresh_token', refresh);
-
-        const userResponse = await api.get('/auth/me/');
-        setUser(userResponse.data);
+    const login = (userData) => {
+        // Just update the user state - LoginPage already did the API call
+        setUser(userData);
     };
 
     const register = async (username, email, password, confirmPassword) => {
@@ -52,22 +45,19 @@ export const AuthProvider = ({ children }) => {
             username,
             email,
             password,
-            password_confirm: confirmPassword,  // Django expects this field name
+            password_confirm: confirmPassword,
         });
 
-        // Django returns nested structure: { user: {...}, tokens: {...} }
-        const { access, refresh } = response.data.tokens;
+        const { token, user } = response.data;
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(user));
 
-        localStorage.setItem('access_token', access);
-        localStorage.setItem('refresh_token', refresh);
-
-        // User data is already in response
-        setUser(response.data.user);
+        setUser(user);
     };
 
     const logout = () => {
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
         setUser(null);
     };
 
