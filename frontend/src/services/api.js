@@ -1,3 +1,9 @@
+/**
+ * Axios API Client for Tech Pulse
+ * 
+ * Configured for Django Token Authentication
+ */
+
 import axios from 'axios';
 
 const api = axios.create({
@@ -7,12 +13,15 @@ const api = axios.create({
     },
 });
 
-// Add token to every request
+/**
+ * Request Interceptor
+ * Adds Token authentication header to all requests
+ */
 api.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem('token');  // Changed from 'access_token' to 'token'
+        const token = localStorage.getItem('token');
         if (token) {
-            config.headers.Authorization = `Token ${token}`;  // Changed from 'Bearer' to 'Token'
+            config.headers.Authorization = `Token ${token}`;
         }
         return config;
     },
@@ -21,15 +30,22 @@ api.interceptors.request.use(
     }
 );
 
-// Handle 401 errors (logout on unauthorized)
+/**
+ * Response Interceptor
+ * Handles 401 errors by redirecting to login
+ */
 api.interceptors.response.use(
-    (response) => response,
-    (error) => {
+    (response) => {
+        return response;
+    },
+    async (error) => {
         if (error.response?.status === 401) {
+            // Token invalid or expired
             localStorage.removeItem('token');
             localStorage.removeItem('user');
             window.location.href = '/login';
         }
+
         return Promise.reject(error);
     }
 );

@@ -161,7 +161,8 @@ class NoteSerializer(serializers.ModelSerializer):
             'follow_up_date',
             'is_pending_followup',
             'is_reviewed',
-            'external_link',
+            'external_link',        # ✅ ADDED
+            'external_links',       # ✅ ADDED
             'created_at',
             'updated_at'
         ]
