@@ -251,13 +251,13 @@ def category_analytics(request):
     categories = (
         Category.objects.annotate(
             bookmark_count=Count(
-                "articles__userarticle",
+                "articles__user_interactions",
                 filter=Q(
-                    articles__userarticle__user=user,
-                    articles__userarticle__is_bookmarked=True,
+                    articles__user_interactions__user=user,
+                    articles__user_interactions__is_bookmarked=True,
                 ),
             ),
-            note_count=Count("articles__note", filter=Q(articles__note__user=user)),
+            note_count=Count("articles__notes", filter=Q(articles__notes__user=user)),
         )
         .filter(bookmark_count__gt=0)
         .order_by("-bookmark_count")
@@ -292,13 +292,13 @@ def source_analytics(request):
     sources = (
         Source.objects.annotate(
             bookmark_count=Count(
-                "articles__userarticle",
+                "articles__user_interactions",
                 filter=Q(
-                    articles__userarticle__user=user,
-                    articles__userarticle__is_bookmarked=True,
+                    articles__user_interactions__user=user,
+                    articles__user_interactions__is_bookmarked=True,
                 ),
             ),
-            note_count=Count("articles__note", filter=Q(articles__note__user=user)),
+            note_count=Count("articles__notes", filter=Q(articles__notes__user=user)),
         )
         .filter(bookmark_count__gt=0)
         .order_by("-bookmark_count")
