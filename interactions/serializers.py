@@ -3,8 +3,10 @@ Serializers for interactions app.
 """
 
 from rest_framework import serializers
-from .models import UserArticle, Note, ArticleReference, ReadingHistory
+
 from articles.serializers import ArticleListSerializer
+
+from .models import ArticleReference, Note, ReadingHistory, UserArticle
 
 
 class UserArticleSerializer(serializers.ModelSerializer):
@@ -12,40 +14,40 @@ class UserArticleSerializer(serializers.ModelSerializer):
     Serializer for UserArticle model.
     Handles user interactions with articles (bookmarks, read status, etc.)
     """
-    
+
     # Nested article data for reading
     article = ArticleListSerializer(read_only=True)
-    
+
     # Article ID for writing (creating/updating)
     article_id = serializers.IntegerField(write_only=True, required=False)
-    
+
     class Meta:
         model = UserArticle
         fields = [
-            'id',
-            'user',
-            'article',
-            'article_id',
-            'is_read',
-            'is_bookmarked',
-            'is_saved_for_later',
-            'keep_decision',
-            'bookmarked_at',
-            'read_at',
-            'saved_at',
-            'created_at',
-            'updated_at'
+            "id",
+            "user",
+            "article",
+            "article_id",
+            "is_read",
+            "is_bookmarked",
+            "is_saved_for_later",
+            "keep_decision",
+            "bookmarked_at",
+            "read_at",
+            "saved_at",
+            "created_at",
+            "updated_at",
         ]
         read_only_fields = [
-            'id',
-            'user',
-            'bookmarked_at',
-            'read_at',
-            'saved_at',
-            'created_at',
-            'updated_at'
+            "id",
+            "user",
+            "bookmarked_at",
+            "read_at",
+            "saved_at",
+            "created_at",
+            "updated_at",
         ]
-    
+
     def create(self, validated_data):
         """
         Create or update UserArticle record.
@@ -55,25 +57,25 @@ class UserArticleSerializer(serializers.ModelSerializer):
         from django.utils import timezone
 
         # Extract article_id
-        article_id = validated_data.pop('article_id', None)
+        article_id = validated_data.pop("article_id", None)
 
         # If article field was provided instead of article_id
-        if not article_id and 'article' in validated_data:
-            article_id = validated_data.pop('article').id
+        if not article_id and "article" in validated_data:
+            article_id = validated_data.pop("article").id
 
         if not article_id:
-            raise serializers.ValidationError({'article': 'Article ID is required'})
+            raise serializers.ValidationError({"article": "Article ID is required"})
 
         # Get user from context
-        user = validated_data.get('user')
+        user = validated_data.get("user")
         if not user:
-            raise serializers.ValidationError({'user': 'User is required'})
+            raise serializers.ValidationError({"user": "User is required"})
 
         # Get or create UserArticle
         user_article, created = UserArticle.objects.get_or_create(
             user=user,
             article_id=article_id,
-            defaults={}  # Don't set defaults, we'll update below
+            defaults={},  # Don't set defaults, we'll update below
         )
 
         # Update all fields from validated_data
@@ -102,7 +104,7 @@ class UserArticleSerializer(serializers.ModelSerializer):
         user_article.save()
 
         return user_article
-    
+
     def update(self, instance, validated_data):
         """
         Update UserArticle and automatically manage timestamps.
@@ -139,82 +141,94 @@ class UserArticleSerializer(serializers.ModelSerializer):
 
 class NoteSerializer(serializers.ModelSerializer):
     """Serializer for Note model."""
-    
+
     article = ArticleListSerializer(read_only=True)
     article_id = serializers.PrimaryKeyRelatedField(
-        queryset=__import__('articles.models', fromlist=['Article']).Article.objects.all(),
-        source='article',
-        write_only=True
+        queryset=__import__(
+            "articles.models", fromlist=["Article"]
+        ).Article.objects.all(),
+        source="article",
+        write_only=True,
     )
     is_pending_followup = serializers.ReadOnlyField()
-    
+
     class Meta:
         model = Note
         fields = [
-            'id',
-            'user',
-            'article',
-            'article_id',
-            'content',
-            'has_follow_up',
-            'follow_up_done',
-            'follow_up_date',
-            'is_pending_followup',
-            'is_reviewed',
-            'external_link',
-            'external_links',
-            'created_at',
-            'updated_at'
+            "id",
+            "user",
+            "article",
+            "article_id",
+            "content",
+            "has_follow_up",
+            "follow_up_done",
+            "follow_up_date",
+            "is_pending_followup",
+            "is_reviewed",
+            "external_link",
+            "external_links",
+            "created_at",
+            "updated_at",
         ]
-        read_only_fields = ['id', 'user', 'created_at', 'updated_at', 'is_pending_followup']
+        read_only_fields = [
+            "id",
+            "user",
+            "created_at",
+            "updated_at",
+            "is_pending_followup",
+        ]
 
 
 class ArticleReferenceSerializer(serializers.ModelSerializer):
     """Serializer for ArticleReference model."""
-    
+
     referenced_article = ArticleListSerializer(read_only=True)
     referenced_article_id = serializers.PrimaryKeyRelatedField(
-        queryset=__import__('articles.models', fromlist=['Article']).Article.objects.all(),
-        source='referenced_article',
-        write_only=True
+        queryset=__import__(
+            "articles.models", fromlist=["Article"]
+        ).Article.objects.all(),
+        source="referenced_article",
+        write_only=True,
     )
-    
+
     class Meta:
         model = ArticleReference
         fields = [
-            'id',
-            'source_note',
-            'referenced_article',
-            'referenced_article_id',
-            'created_at'
+            "id",
+            "source_note",
+            "referenced_article",
+            "referenced_article_id",
+            "created_at",
         ]
-        read_only_fields = ['id', 'created_at']
+        read_only_fields = ["id", "created_at"]
 
 
 class ReadingHistorySerializer(serializers.ModelSerializer):
     """Serializer for ReadingHistory model."""
-    
+
     article = ArticleListSerializer(read_only=True)
     article_id = serializers.PrimaryKeyRelatedField(
-        queryset=__import__('articles.models', fromlist=['Article']).Article.objects.all(),
-        source='article',
-        write_only=True
+        queryset=__import__(
+            "articles.models", fromlist=["Article"]
+        ).Article.objects.all(),
+        source="article",
+        write_only=True,
     )
     time_spent_formatted = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = ReadingHistory
         fields = [
-            'id',
-            'user',
-            'article',
-            'article_id',
-            'read_at',
-            'time_spent',
-            'time_spent_formatted'
+            "id",
+            "user",
+            "article",
+            "article_id",
+            "read_at",
+            "time_spent",
+            "time_spent_formatted",
         ]
-        read_only_fields = ['id', 'user', 'read_at']
-    
+        read_only_fields = ["id", "user", "read_at"]
+
     def get_time_spent_formatted(self, obj):
         """Format time spent in human-readable format."""
         seconds = obj.time_spent

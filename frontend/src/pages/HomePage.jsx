@@ -8,6 +8,8 @@
 import { useState, useEffect } from 'react';
 import ArticleCard from '../components/ArticleCard';
 import NotesPanel from '../components/NotesPanel';
+import { ArticleListSkeleton } from '../components/LoadingSkeleton';
+import { handleApiError } from '../utils/toast';
 import api from '../services/api';
 
 function HomePage() {
@@ -71,7 +73,8 @@ function HomePage() {
 
         } catch (err) {
             console.error('Error fetching articles:', err);
-            setError('Failed to load articles. Please try again.');
+            const errorMessage = handleApiError(err, 'Failed to load articles');
+            setError(errorMessage);
         } finally {
             setLoading(false);
         }
@@ -233,30 +236,30 @@ function HomePage() {
             </div>
 
             {/* Loading State */}
-            {loading && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {[1, 2, 3, 4, 5, 6].map(n => (
-                        <div key={n} className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
-                            <div className="h-48 bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
-                            <div className="p-6 space-y-3">
-                                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-                                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-3/4"></div>
-                                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-1/2"></div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            )}
+            {loading && <ArticleListSkeleton count={6} />}
 
             {/* Error State */}
             {error && !loading && (
                 <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6 text-center">
-                    <p className="text-red-600 dark:text-red-400 mb-4">{error}</p>
+                    <svg
+                        className="mx-auto h-12 w-12 text-red-400 mb-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                    >
+                        <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                    </svg>
+                    <p className="text-red-600 dark:text-red-400 mb-4 text-lg font-medium">{error}</p>
                     <button
                         onClick={fetchArticles}
                         className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
                     >
-                        Retry
+                        Try Again
                     </button>
                 </div>
             )}

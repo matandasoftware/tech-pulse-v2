@@ -6,23 +6,38 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('articles', '0001_initial'),
+        ("articles", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='article',
-            name='slug',
-            field=models.SlugField(blank=True, help_text='URL-friendly version of title', max_length=500, unique=True),
+            model_name="article",
+            name="slug",
+            field=models.SlugField(
+                blank=True,
+                help_text="URL-friendly version of title",
+                max_length=500,
+                unique=True,
+            ),
         ),
         migrations.AddField(
-            model_name='category',
-            name='slug',
-            field=models.SlugField(blank=True, help_text='URL-friendly version of name', max_length=100, unique=True),
+            model_name="category",
+            name="slug",
+            field=models.SlugField(
+                blank=True,
+                help_text="URL-friendly version of name",
+                max_length=100,
+                unique=True,
+            ),
         ),
         migrations.AddField(
-            model_name='source',
-            name='slug',
-            field=models.SlugField(blank=True, help_text='URL-friendly version of name', max_length=200, unique=True),
+            model_name="source",
+            name="slug",
+            field=models.SlugField(
+                blank=True,
+                help_text="URL-friendly version of name",
+                max_length=200,
+                unique=True,
+            ),
         ),
     ]

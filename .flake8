@@ -1,0 +1,23 @@
+﻿[flake8]
+max-line-length = 88
+exclude =
+    venv
+    .venv
+    env
+    .env
+    migrations
+    __pycache__
+    node_modules
+    frontend/node_modules
+    frontend/dist
+    frontend/build
+    .git
+    .pytest_cache
+    *.egg-info
+    db.sqlite3
+
+ignore = E203,W503,E501
+
+show-source = True
+statistics = True
+count = True

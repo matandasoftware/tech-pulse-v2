@@ -12,10 +12,10 @@ from django.db import models
 class UserArticle(models.Model):
     """
     Track user interactions with individual articles.
-    
+
     Stores bookmarks, read status, save-for-later, and keep/delete decisions.
     One row per user-article combination (enforced by unique_together).
-    
+
     Attributes:
         user (ForeignKey): User who interacted with article
         article (ForeignKey): Article that was interacted with
@@ -29,91 +29,80 @@ class UserArticle(models.Model):
         created_at (DateTimeField): Interaction creation timestamp
         updated_at (DateTimeField): Last update timestamp
     """
-    
+
     DECISION_CHOICES = [
-        ('undecided', 'Undecided'),
-        ('keep', 'Keep'),
-        ('delete', 'Delete'),
+        ("undecided", "Undecided"),
+        ("keep", "Keep"),
+        ("delete", "Delete"),
     ]
-    
+
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='article_interactions',
-        help_text="User who interacted with the article"
+        related_name="article_interactions",
+        help_text="User who interacted with the article",
     )
-    
+
     article = models.ForeignKey(
-        'articles.Article',
+        "articles.Article",
         on_delete=models.CASCADE,
-        related_name='user_interactions',
-        help_text="Article that was interacted with"
+        related_name="user_interactions",
+        help_text="Article that was interacted with",
     )
-    
+
     is_read = models.BooleanField(
-        default=False,
-        help_text="Whether user marked this article as read"
+        default=False, help_text="Whether user marked this article as read"
     )
-    
+
     is_bookmarked = models.BooleanField(
-        default=False,
-        help_text="Whether user bookmarked this article"
+        default=False, help_text="Whether user bookmarked this article"
     )
-    
+
     is_saved_for_later = models.BooleanField(
-        default=False,
-        help_text="Whether user saved this article for later reading"
+        default=False, help_text="Whether user saved this article for later reading"
     )
-    
+
     keep_decision = models.CharField(
         max_length=10,
         choices=DECISION_CHOICES,
-        default='undecided',
-        help_text="User's decision to keep or delete this article"
+        default="undecided",
+        help_text="User's decision to keep or delete this article",
     )
-    
+
     bookmarked_at = models.DateTimeField(
-        null=True,
-        blank=True,
-        help_text="Timestamp when article was bookmarked"
+        null=True, blank=True, help_text="Timestamp when article was bookmarked"
     )
-    
+
     read_at = models.DateTimeField(
-        null=True,
-        blank=True,
-        help_text="Timestamp when article was marked as read"
+        null=True, blank=True, help_text="Timestamp when article was marked as read"
     )
-    
+
     saved_at = models.DateTimeField(
-        null=True,
-        blank=True,
-        help_text="Timestamp when article was saved for later"
+        null=True, blank=True, help_text="Timestamp when article was saved for later"
     )
-    
+
     created_at = models.DateTimeField(
-        auto_now_add=True,
-        help_text="Timestamp when interaction was created"
+        auto_now_add=True, help_text="Timestamp when interaction was created"
     )
-    
+
     updated_at = models.DateTimeField(
-        auto_now=True,
-        help_text="Timestamp when interaction was last updated"
+        auto_now=True, help_text="Timestamp when interaction was last updated"
     )
-    
+
     class Meta:
         """Meta options for UserArticle model."""
-        
-        unique_together = ['user', 'article']
-        ordering = ['-updated_at']
+
+        unique_together = ["user", "article"]
+        ordering = ["-updated_at"]
         indexes = [
-            models.Index(fields=['user', 'is_bookmarked']),
-            models.Index(fields=['user', 'is_read']),
+            models.Index(fields=["user", "is_bookmarked"]),
+            models.Index(fields=["user", "is_read"]),
         ]
-    
+
     def __str__(self):
         """
         Return string representation of user-article interaction.
-        
+
         Returns:
             str: User and article title (truncated to 50 chars)
         """
@@ -123,10 +112,10 @@ class UserArticle(models.Model):
 class Note(models.Model):
     """
     User note on an article with follow-up tracking and external links.
-    
+
     Allows users to write notes on articles, mark notes that require
     follow-up action, and attach external reference URLs.
-    
+
     Attributes:
         user (ForeignKey): User who wrote the note
         article (ForeignKey): Article the note is about
@@ -138,94 +127,82 @@ class Note(models.Model):
         created_at (DateTimeField): Note creation timestamp
         updated_at (DateTimeField): Last update timestamp
     """
-    
+
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='notes',
-        help_text="User who wrote this note"
+        related_name="notes",
+        help_text="User who wrote this note",
     )
-    
+
     article = models.ForeignKey(
-        'articles.Article',
+        "articles.Article",
         on_delete=models.CASCADE,
-        related_name='notes',
-        help_text="Article this note is about"
+        related_name="notes",
+        help_text="Article this note is about",
     )
-    
-    content = models.TextField(
-        help_text="Note content"
-    )
-    
+
+    content = models.TextField(help_text="Note content")
+
     has_follow_up = models.BooleanField(
-        default=False,
-        help_text="Whether this note requires follow-up action"
+        default=False, help_text="Whether this note requires follow-up action"
     )
-    
+
     follow_up_done = models.BooleanField(
-        default=False,
-        help_text="Whether follow-up action has been completed"
+        default=False, help_text="Whether follow-up action has been completed"
     )
-    
+
     follow_up_date = models.DateTimeField(
-        null=True,
-        blank=True,
-        help_text="Optional deadline for follow-up action"
+        null=True, blank=True, help_text="Optional deadline for follow-up action"
     )
-    
+
     external_links = models.JSONField(
         null=True,
         blank=True,
         default=list,
-        help_text="External reference URLs (stored as JSON array)"
+        help_text="External reference URLs (stored as JSON array)",
     )
 
     is_reviewed = models.BooleanField(
-        default=False,
-        help_text="Whether user has reviewed/acknowledged this note"
+        default=False, help_text="Whether user has reviewed/acknowledged this note"
     )
 
     external_link = models.URLField(
-        max_length=500,
-        blank=True,
-        null=True,
-        help_text="Single external reference URL"
+        max_length=500, blank=True, null=True, help_text="Single external reference URL"
     )
 
     created_at = models.DateTimeField(
-        auto_now_add=True,
-        help_text="Timestamp when note was created"
+        auto_now_add=True, help_text="Timestamp when note was created"
     )
-    
+
     updated_at = models.DateTimeField(
-        auto_now=True,
-        help_text="Timestamp when note was last updated"
+        auto_now=True, help_text="Timestamp when note was last updated"
     )
-    
+
     class Meta:
         """Meta options for Note model."""
 
-        ordering = ['-created_at']
+        ordering = ["-created_at"]
         indexes = [
-            models.Index(fields=['user', 'article']),
-            models.Index(fields=['has_follow_up', 'follow_up_done']),
-            models.Index(fields=['is_reviewed']),
+            models.Index(fields=["user", "article"]),
+            models.Index(fields=["has_follow_up", "follow_up_done"]),
+            models.Index(fields=["is_reviewed"]),
         ]
-    
+
     def __str__(self):
         """
         Return string representation of note.
-        
+
         Returns:
             str: User and article title (truncated to 30 chars)
         """
         return f"Note by {self.user.username} on {self.article.title[:30]}"
-    
+
     @property
     def is_pending_followup(self):
         """
         Check if follow-up is pending.
-        
+
         Returns:
             bool: True if follow-up needed and not done, False otherwise
         """
@@ -235,45 +212,44 @@ class Note(models.Model):
 class ArticleReference(models.Model):
     """
     Link between a note and a referenced article.
-    
+
     Allows notes to reference other articles, creating connections
     between related content. Enables "See also" functionality.
-    
+
     Attributes:
         source_note (ForeignKey): Note containing the reference
         referenced_article (ForeignKey): Article being referenced
         created_at (DateTimeField): Reference creation timestamp
     """
-    
+
     source_note = models.ForeignKey(
         Note,
         on_delete=models.CASCADE,
-        related_name='article_references',
-        help_text="Note that contains this reference"
+        related_name="article_references",
+        help_text="Note that contains this reference",
     )
-    
+
     referenced_article = models.ForeignKey(
-        'articles.Article',
+        "articles.Article",
         on_delete=models.CASCADE,
-        related_name='referenced_in_notes',
-        help_text="Article being referenced"
+        related_name="referenced_in_notes",
+        help_text="Article being referenced",
     )
-    
+
     created_at = models.DateTimeField(
-        auto_now_add=True,
-        help_text="Timestamp when reference was created"
+        auto_now_add=True, help_text="Timestamp when reference was created"
     )
-    
+
     class Meta:
         """Meta options for ArticleReference model."""
-        
-        unique_together = ['source_note', 'referenced_article']
-        ordering = ['-created_at']
-    
+
+        unique_together = ["source_note", "referenced_article"]
+        ordering = ["-created_at"]
+
     def __str__(self):
         """
         Return string representation of article reference.
-        
+
         Returns:
             str: Source note ID and referenced article ID
         """
@@ -286,58 +262,55 @@ class ArticleReference(models.Model):
 class ReadingHistory(models.Model):
     """
     Track user reading patterns for personalized recommendations.
-    
+
     Records when users read articles and how long they spent reading.
     Used to analyze interests and generate recommendations.
-    
+
     Attributes:
         user (ForeignKey): User who read the article
         article (ForeignKey): Article that was read
         read_at (DateTimeField): When article was opened
         time_spent (IntegerField): Seconds spent reading
     """
-    
+
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='reading_history',
-        help_text="User who read the article"
+        related_name="reading_history",
+        help_text="User who read the article",
     )
-    
+
     article = models.ForeignKey(
-        'articles.Article',
+        "articles.Article",
         on_delete=models.CASCADE,
-        related_name='read_by',
-        help_text="Article that was read"
+        related_name="read_by",
+        help_text="Article that was read",
     )
-    
+
     read_at = models.DateTimeField(
-        auto_now_add=True,
-        help_text="Timestamp when article was opened"
+        auto_now_add=True, help_text="Timestamp when article was opened"
     )
-    
+
     time_spent = models.IntegerField(
-        default=0,
-        help_text="Time spent reading in seconds"
+        default=0, help_text="Time spent reading in seconds"
     )
-    
+
     class Meta:
         """Meta options for ReadingHistory model."""
-        
-        verbose_name_plural = 'Reading histories'
-        ordering = ['-read_at']
+
+        verbose_name_plural = "Reading histories"
+        ordering = ["-read_at"]
         indexes = [
-            models.Index(fields=['user', '-read_at']),
+            models.Index(fields=["user", "-read_at"]),
         ]
-    
+
     def __str__(self):
         """
         Return string representation of reading history entry.
-        
+
         Returns:
             str: User, article title (truncated), and timestamp
         """
         return (
-            f"{self.user.username} read "
-            f"{self.article.title[:30]} at {self.read_at}"
+            f"{self.user.username} read " f"{self.article.title[:30]} at {self.read_at}"
         )

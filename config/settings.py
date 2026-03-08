@@ -20,7 +20,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-@p0uo*o#6u!8@d+94t!f#_vyt_f(r9@^7g#$ki^d&+jg_!lnw5'
+SECRET_KEY = "django-insecure-@p0uo*o#6u!8@d+94t!f#_vyt_f(r9@^7g#$ki^d&+jg_!lnw5"
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -31,62 +31,66 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-
-    'rest_framework', # Add Django REST Framework for building APIs
-    'rest_framework.authtoken', # Add Token authentication
-    'corsheaders', # Add CORS headers to allow cross-origin requests from the frontend
-    'django_filters', # Add Django Filters for filtering querysets in the API
-
-    'articles', # Add the articles app to manage article-related functionality
-    'users', # Add the users app to manage user-related functionality
-    'interactions', # Add the interactions app to manage user interactions with articles (bookmarks, notes, etc.)
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "rest_framework",  # Add Django REST Framework for building APIs
+    "rest_framework.authtoken",  # Add Token authentication
+    "corsheaders",  # Add CORS headers to allow cross-origin requests from the frontend
+    "django_filters",  # Add Django Filters for filtering querysets in the API
+    "django_celery_beat",  # Add Celery Beat for periodic tasks
+    "django_celery_results",  # Add Celery Results for storing task results in database
+    "articles",  # Add the articles app to manage article-related functionality
+    "users",  # Add the users app to manage user-related functionality
+    # Add the interactions app to manage user interactions with articles
+    # (bookmarks, notes, etc.)
+    "interactions",
 ]
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware', # Add CORS middleware at the top to ensure it runs before other middleware
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # Add CORS middleware at the top to ensure it runs before other
+    # middleware
+    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-ROOT_URLCONF = 'config.urls'
+ROOT_URLCONF = "config.urls"
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
             ],
         },
     },
 ]
 
-WSGI_APPLICATION = 'config.wsgi.application'
+WSGI_APPLICATION = "config.wsgi.application"
 
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
     }
 }
 
@@ -96,16 +100,19 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        "NAME": (
+            "django.contrib.auth.password_validation."
+            "UserAttributeSimilarityValidator"
+        ),
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
 
@@ -113,9 +120,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = "UTC"
 
 USE_I18N = True
 
@@ -125,58 +132,109 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = "static/"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.TokenAuthentication',  # ✅ Token auth
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.TokenAuthentication",  # ✅ Token auth
     ],
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticatedOrReadOnly",
     ],
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10,
-    'DEFAULT_FILTER_BACKENDS': [
-        'django_filters.rest_framework.DjangoFilterBackend',
-        'rest_framework.filters.SearchFilter',
-        'rest_framework.filters.OrderingFilter',
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 10,
+    "DEFAULT_FILTER_BACKENDS": [
+        "django_filters.rest_framework.DjangoFilterBackend",
+        "rest_framework.filters.SearchFilter",
+        "rest_framework.filters.OrderingFilter",
     ],
 }
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://localhost:5173",
-    "http://127.0.0.1:3000",  
-    "http://127.0.0.1:5173", 
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:5173",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
 
-AUTH_USER_MODEL = 'users.CustomUser'
+AUTH_USER_MODEL = "users.CustomUser"
 
 # Logging Configuration
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
         },
     },
-    'root': {
-        'handlers': ['console'],
-        'level': 'INFO',
+    "root": {
+        "handlers": ["console"],
+        "level": "INFO",
     },
-    'loggers': {
-        'django': {
-            'handlers': ['console'],
-            'level': 'INFO',
-            'propagate': False,
+    "loggers": {
+        "django": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
         },
     },
 }
+
+# ==============================================================================
+# CELERY CONFIGURATION
+# ==============================================================================
+
+# Celery broker URL
+# Option 1: Use Redis (recommended for production)
+# CELERY_BROKER_URL = 'redis://localhost:6379/0'
+
+# Option 2: Use in-memory broker (development only, not persistent)
+CELERY_BROKER_URL = "memory://"
+
+# Celery result backend - store results in Django database
+CELERY_RESULT_BACKEND = "django-db"
+
+# Cache backend for Celery results
+CELERY_CACHE_BACKEND = "django-cache"
+
+# Enable Celery result extended (for django-db backend)
+CELERY_RESULT_EXTENDED = True
+
+# Accept content types
+CELERY_ACCEPT_CONTENT = ["json"]
+
+# Task serialization format
+CELERY_TASK_SERIALIZER = "json"
+
+# Result serialization format
+CELERY_RESULT_SERIALIZER = "json"
+
+# Timezone
+CELERY_TIMEZONE = "UTC"
+
+# Task time limit (1 hour)
+CELERY_TASK_TIME_LIMIT = 3600
+
+# Task soft time limit (50 minutes)
+CELERY_TASK_SOFT_TIME_LIMIT = 3000
+
+# Beat scheduler (use database for persistence)
+CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
+
+# Enable UTC
+CELERY_ENABLE_UTC = True
+
+# Task always eager (for development/testing - executes tasks synchronously)
+# Set to False in production
+CELERY_TASK_ALWAYS_EAGER = False
+
+# Eager propagates exceptions
+CELERY_TASK_EAGER_PROPAGATES = True

@@ -13,6 +13,8 @@
 
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { DashboardSkeleton } from '../components/LoadingSkeleton';
+import { handleApiError } from '../utils/toast';
 import api from '../services/api';
 
 function DashboardPage() {
@@ -37,10 +39,10 @@ function DashboardPage() {
         try {
             const response = await api.get('/dashboard/stats/');
             setStats(response.data);
-            console.log('Dashboard stats:', response.data);
         } catch (err) {
-            setError(err.message);
             console.error('Error fetching dashboard stats:', err);
+            const errorMessage = handleApiError(err, 'Failed to load dashboard');
+            setError(errorMessage);
         } finally {
             setLoading(false);
         }
@@ -57,23 +59,12 @@ function DashboardPage() {
         return `${hours}h ${minutes % 60}m`;
     };
 
-    /**
-     * Format date for display
-     */
-    const formatDate = (dateString) => {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric'
-        });
-    };
-
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
             {/* Header */}
             <div className="mb-8">
-                <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
+                <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-2">
                     📊 My Dashboard
                 </h1>
                 <p className="text-gray-600 dark:text-gray-300">
@@ -82,26 +73,28 @@ function DashboardPage() {
             </div>
 
             {/* Loading State */}
-            {loading && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
-                        <div
-                            key={n}
-                            className="bg-gray-200 dark:bg-gray-700 rounded-lg h-32 animate-pulse"
-                        />
-                    ))}
-                </div>
-            )}
+            {loading && <DashboardSkeleton />}
 
             {/* Error State */}
             {error && !loading && (
                 <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6 text-center">
-                    <p className="text-red-600 dark:text-red-400 font-medium">
-                        ⚠️ Error loading dashboard: {error}
-                    </p>
+                    <svg
+                        className="mx-auto h-12 w-12 text-red-400 mb-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                    >
+                        <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                    </svg>
+                    <p className="text-red-600 dark:text-red-400 mb-4 text-lg font-medium">{error}</p>
                     <button
                         onClick={fetchStats}
-                        className="mt-4 px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                        className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
                     >
                         Try Again
                     </button>
@@ -113,24 +106,50 @@ function DashboardPage() {
                 <div className="space-y-8">
 
                     {/* Main Stats Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
-                        {/* Total Articles - NEW */}
+                        {/* Total Articles (All in System) */}
                         <Link
                             to="/"
-                            className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 hover:shadow-xl transition-shadow border-l-4 border-gray-500"
+                            className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 hover:shadow-xl transition-shadow border-l-4 border-purple-500"
                         >
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-3xl font-bold text-gray-600 dark:text-gray-400">
+                                    <p className="text-3xl font-bold text-purple-600 dark:text-purple-400">
                                         {stats?.counts?.total_articles || 0}
                                     </p>
                                     <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 font-medium">
                                         📰 Total Articles
                                     </p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-500 mt-0.5">
+                                        Available in feed
+                                    </p>
                                 </div>
-                                <div className="w-12 h-12 bg-gray-100 dark:bg-gray-900/30 rounded-full flex items-center justify-center">
+                                <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center">
                                     <span className="text-2xl">📰</span>
+                                </div>
+                            </div>
+                        </Link>
+
+                        {/* Personal Articles (User Interactions) */}
+                        <Link
+                            to="/"
+                            className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 hover:shadow-xl transition-shadow border-l-4 border-indigo-500"
+                        >
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">
+                                        {stats?.counts?.user_articles || 0}
+                                    </p>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 font-medium">
+                                        👤 My Articles
+                                    </p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-500 mt-0.5">
+                                        You've interacted with
+                                    </p>
+                                </div>
+                                <div className="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center">
+                                    <span className="text-2xl">👤</span>
                                 </div>
                             </div>
                         </Link>

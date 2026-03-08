@@ -1,0 +1,78 @@
+[33mcommit 7ee0ba7c7b82babd16a574d2fc45950072f2f516[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m
+Author: pfarelo channel <pfarelochannel@gmail.com>
+Date:   Sun Mar 8 03:06:55 2026 +0200
+
+    Add RSS feed fetching system and intelligent article lifecycle management
+    
+    Backend - Article Fetching System:
+    - Add RSS feed support to Source model (rss_feed_url, is_active, fetch_frequency)
+    - Create fetch_articles management command with RSS feed parsing
+    - Add add_sources command to populate 8 major tech news sources
+    - Install feedparser, beautifulsoup4, python-dateutil for feed parsing
+    - Add published_date field to Article model
+    - Implement automatic category detection based on content keywords
+    - Add fetch error tracking (last_fetch_status, last_fetch_error)
+    - Support for TechCrunch, The Verge, Ars Technica, Wired, VentureBeat, Hacker News, MIT Tech Review, ZDNet
+    
+    Backend - Intelligent Article Lifecycle:
+    - Add state field to Article model (fresh/active/archived)
+    - Add archived_at timestamp for tracking archival
+    - Implement automatic state transitions based on article age:
+      * 0-7 days: fresh (new content, top priority)
+      * 7-30 days: active (recent but not new)
+      * 30+ days: archived (hidden from default feed)
+    - Add database indexes for efficient state-based queries
+    - Protect bookmarked articles from auto-archiving
+    - Add helper methods: is_fresh(), is_archived(), age_in_days()
+    - Create archive_old_articles management command with dry-run support
+    - Update ArticleViewSet to exclude archived articles by default
+    - Add smart feed prioritization (fresh → active → archived, then by date)
+    - Add article_stats API endpoint for dashboard metrics
+    
+    Frontend - Enhanced Dashboard:
+    - Make all dashboard stat cards clickable with navigation
+    - Add Total Articles card linking to home page
+    - Add fresh articles count indicator
+    - Add Article Lifecycle info banner explaining states
+    - Update dashboard to show article statistics
+    - Improve card hover effects and visual feedback
+    - Add navigation to filtered views (pending follow-ups, etc.)
+    
+    Admin:
+    - Update Article admin to show state and archived_at fields
+    - Add list filters for article state
+    - Display fetch status in Source admin
+    
+    Features:
+    - Automatic RSS article fetching from multiple sources
+    - Smart feed that stays clean and relevant
+    - Archived articles still searchable but hidden from main feed
+    - Bookmark protection (bookmarked articles never archived)
+    - Batch archive management with dry-run testing
+    - Category auto-detection from article content
+    - Source-based fetch frequency control
+    - Dashboard article metrics and lifecycle explanation
+    
+    Commands:
+    - python manage.py add_sources (populate news sources)
+    - python manage.py fetch_articles (fetch from RSS feeds)
+    - python manage.py fetch_articles --force (ignore frequency limits)
+    - python manage.py archive_old_articles (auto-archive old articles)
+    - python manage.py archive_old_articles --dry-run (preview archival)
+    - python manage.py archive_old_articles --days 60 (custom threshold)
+
+ articles/admin.py                                  |  17 [32m+[m[31m-[m
+ articles/management/commands/add_sources.py        |  85 [32m+++++++[m
+ .../management/commands/archive_old_articles.py    |  77 [32m++++++[m
+ articles/management/commands/fetch_articles.py     | 217 [32m++++++++++++++++[m
+ ...etch_error_source_last_fetch_status_and_more.py |  28 [32m+++[m
+ .../0005_remove_source_description_and_more.py     |  71 [32m++++++[m
+ ...6_article_archived_at_article_state_and_more.py |  31 [32m+++[m
+ articles/models.py                                 | 279 [32m+++++++++++++++[m[31m------[m
+ articles/serializers.py                            |  21 [32m+[m[31m-[m
+ articles/views.py                                  |  54 [32m+++[m[31m-[m
+ config/settings.py                                 |  30 [32m+[m[31m--[m
+ frontend/src/pages/DashboardPage.jsx               |  58 [32m+++[m[31m--[m
+ requirements.txt                                   | Bin [31m726[m -> [32m864[m bytes
+ users/urls.py                                      |   1 [32m+[m
+ 14 files changed, 822 insertions(+), 147 deletions(-)

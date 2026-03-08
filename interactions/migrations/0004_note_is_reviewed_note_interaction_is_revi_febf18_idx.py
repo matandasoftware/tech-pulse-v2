@@ -7,19 +7,24 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('articles', '0003_bookmark'),
-        ('interactions', '0003_note_external_links_and_more'),
+        ("articles", "0003_bookmark"),
+        ("interactions", "0003_note_external_links_and_more"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='note',
-            name='is_reviewed',
-            field=models.BooleanField(default=False, help_text='Whether user has reviewed/acknowledged this note'),
+            model_name="note",
+            name="is_reviewed",
+            field=models.BooleanField(
+                default=False,
+                help_text="Whether user has reviewed/acknowledged this note",
+            ),
         ),
         migrations.AddIndex(
-            model_name='note',
-            index=models.Index(fields=['is_reviewed'], name='interaction_is_revi_febf18_idx'),
+            model_name="note",
+            index=models.Index(
+                fields=["is_reviewed"], name="interaction_is_revi_febf18_idx"
+            ),
         ),
     ]

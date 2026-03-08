@@ -8,23 +8,57 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('articles', '0002_article_slug_category_slug_source_slug'),
+        ("articles", "0002_article_slug_category_slug_source_slug"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Bookmark',
+            name="Bookmark",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_at', models.DateTimeField(auto_now_add=True, help_text='When bookmark was created')),
-                ('article', models.ForeignKey(help_text='Article being bookmarked', on_delete=django.db.models.deletion.CASCADE, related_name='bookmarked_by', to='articles.article')),
-                ('user', models.ForeignKey(help_text='User who created this bookmark', on_delete=django.db.models.deletion.CASCADE, related_name='bookmarks', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "created_at",
+                    models.DateTimeField(
+                        auto_now_add=True, help_text="When bookmark was created"
+                    ),
+                ),
+                (
+                    "article",
+                    models.ForeignKey(
+                        help_text="Article being bookmarked",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="bookmarked_by",
+                        to="articles.article",
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        help_text="User who created this bookmark",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="bookmarks",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-created_at'],
-                'indexes': [models.Index(fields=['user', '-created_at'], name='articles_bo_user_id_78d000_idx')],
-                'unique_together': {('user', 'article')},
+                "ordering": ["-created_at"],
+                "indexes": [
+                    models.Index(
+                        fields=["user", "-created_at"],
+                        name="articles_bo_user_id_78d000_idx",
+                    )
+                ],
+                "unique_together": {("user", "article")},
             },
         ),
     ]

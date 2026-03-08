@@ -55,7 +55,7 @@ function NoteForm({ article, note, onNoteCreated, onNoteUpdated, onCancel }) {
                 external_links: [...formData.external_links, newLink]
             });
             setNewLink('');
-        } catch (err) {
+        } catch {
             alert('Please enter a valid URL (e.g., https://example.com)');
         }
     };

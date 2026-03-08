@@ -3,22 +3,23 @@ Admin configuration for articles app.
 """
 
 from django.contrib import admin
-from .models import Category, Source, Article
+
+from .models import Article, Category, Source
 
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
     """Admin interface for Category model."""
-    
-    list_display = ['name', 'created_at', 'article_count']
-    search_fields = ['name', 'description']
-    readonly_fields = ['created_at']
-    
+
+    list_display = ["name", "created_at", "article_count"]
+    search_fields = ["name", "description"]
+    readonly_fields = ["created_at"]
+
     def article_count(self, obj):
         """Display count of articles in this category."""
         return obj.articles.count()
-    
-    article_count.short_description = 'Articles'
+
+    article_count.short_description = "Articles"
 
 
 @admin.register(Source)
@@ -26,90 +27,64 @@ class SourceAdmin(admin.ModelAdmin):
     """Admin interface for Source model."""
 
     list_display = [
-        'name',
-        'is_active',
-        'fetch_frequency',
-        'last_fetched',
-        'article_count'
+        "name",
+        "is_active",
+        "fetch_frequency",
+        "last_fetched",
+        "article_count",
     ]
 
-    list_filter = ['is_active']
-    search_fields = ['name', 'website_url', 'rss_feed_url']
-    readonly_fields = ['created_at', 'last_fetched']
+    list_filter = ["is_active"]
+    search_fields = ["name", "website_url", "rss_feed_url"]
+    readonly_fields = ["created_at", "last_fetched"]
 
     fieldsets = [
-        ('Basic Information', {
-            'fields': ('name', 'website_url', 'rss_feed_url')
-        }),
-        ('Fetch Configuration', {
-            'fields': ('is_active', 'fetch_frequency', 'last_fetched')
-        }),
-        ('Metadata', {
-            'fields': ('created_at',)
-        }),
+        ("Basic Information", {"fields": ("name", "website_url", "rss_feed_url")}),
+        (
+            "Fetch Configuration",
+            {"fields": ("is_active", "fetch_frequency", "last_fetched")},
+        ),
+        ("Metadata", {"fields": ("created_at",)}),
     ]
-    
+
     def article_count(self, obj):
         """Display count of articles from this source."""
         return obj.articles.count()
-    
-    article_count.short_description = 'Articles'
+
+    article_count.short_description = "Articles"
 
 
 @admin.register(Article)
 class ArticleAdmin(admin.ModelAdmin):
     """Admin interface for Article model."""
-    
+
     list_display = [
-        'title_truncated',
-        'source',
-        'category',
-        'author',
-        'published_at',
-        'view_count',
-        'bookmark_count'
+        "title_truncated",
+        "source",
+        "category",
+        "author",
+        "published_at",
+        "view_count",
+        "bookmark_count",
     ]
-    
-    list_filter = [
-        'category',
-        'source',
-        'published_at',
-        'fetched_at'
-    ]
-    
-    search_fields = [
-        'title',
-        'content',
-        'summary',
-        'author'
-    ]
-    
-    readonly_fields = [
-        'view_count',
-        'bookmark_count',
-        'fetched_at',
-        'updated_at'
-    ]
-    
+
+    list_filter = ["category", "source", "published_at", "fetched_at"]
+
+    search_fields = ["title", "content", "summary", "author"]
+
+    readonly_fields = ["view_count", "bookmark_count", "fetched_at", "updated_at"]
+
     fieldsets = [
-        ('Content', {
-            'fields': ('title', 'content', 'summary', 'author')
-        }),
-        ('Metadata', {
-            'fields': ('url', 'image_url', 'source', 'category')
-        }),
-        ('Timestamps', {
-            'fields': ('published_at', 'fetched_at', 'updated_at')
-        }),
-        ('Engagement', {
-            'fields': ('view_count', 'bookmark_count')
-        }),
+        ("Content", {"fields": ("title", "content", "summary", "author")}),
+        ("Metadata", {"fields": ("url", "image_url", "source", "category")}),
+        ("Timestamps", {"fields": ("published_at", "fetched_at", "updated_at")}),
+        ("Engagement", {"fields": ("view_count", "bookmark_count")}),
     ]
-    
-    date_hierarchy = 'published_at'
-    
+
+    date_hierarchy = "published_at"
+
     def title_truncated(self, obj):
         """Display truncated title."""
-        return obj.title[:50] + '...' if len(obj.title) > 50 else obj.title
-    
-    title_truncated.short_description = 'Title'
+        return obj.title[:50] + "..." if len(obj.title) > 50 else obj.title
+
+    title_truncated.short_description = "Title"

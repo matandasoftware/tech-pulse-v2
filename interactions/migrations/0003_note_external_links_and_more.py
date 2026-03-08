@@ -7,18 +7,28 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('interactions', '0002_initial'),
+        ("interactions", "0002_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='note',
-            name='external_links',
-            field=models.JSONField(blank=True, default=list, help_text='External reference URLs (stored as JSON array)', null=True),
+            model_name="note",
+            name="external_links",
+            field=models.JSONField(
+                blank=True,
+                default=list,
+                help_text="External reference URLs (stored as JSON array)",
+                null=True,
+            ),
         ),
         migrations.AlterField(
-            model_name='articlereference',
-            name='source_note',
-            field=models.ForeignKey(help_text='Note that contains this reference', on_delete=django.db.models.deletion.CASCADE, related_name='article_references', to='interactions.note'),
+            model_name="articlereference",
+            name="source_note",
+            field=models.ForeignKey(
+                help_text="Note that contains this reference",
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="article_references",
+                to="interactions.note",
+            ),
         ),
     ]

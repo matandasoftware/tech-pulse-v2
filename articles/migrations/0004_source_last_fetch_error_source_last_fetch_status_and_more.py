@@ -6,23 +6,37 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('articles', '0003_bookmark'),
+        ("articles", "0003_bookmark"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='source',
-            name='last_fetch_error',
-            field=models.TextField(blank=True, help_text='Error message if last fetch failed', null=True),
+            model_name="source",
+            name="last_fetch_error",
+            field=models.TextField(
+                blank=True, help_text="Error message if last fetch failed", null=True
+            ),
         ),
         migrations.AddField(
-            model_name='source',
-            name='last_fetch_status',
-            field=models.CharField(choices=[('success', 'Success'), ('error', 'Error'), ('pending', 'Pending'), ('never', 'Never Fetched')], default='never', help_text='Status of last fetch attempt', max_length=20),
+            model_name="source",
+            name="last_fetch_status",
+            field=models.CharField(
+                choices=[
+                    ("success", "Success"),
+                    ("error", "Error"),
+                    ("pending", "Pending"),
+                    ("never", "Never Fetched"),
+                ],
+                default="never",
+                help_text="Status of last fetch attempt",
+                max_length=20,
+            ),
         ),
         migrations.AddField(
-            model_name='source',
-            name='total_articles_fetched',
-            field=models.IntegerField(default=0, help_text='Total number of articles fetched from this source'),
+            model_name="source",
+            name="total_articles_fetched",
+            field=models.IntegerField(
+                default=0, help_text="Total number of articles fetched from this source"
+            ),
         ),
     ]

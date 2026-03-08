@@ -13,56 +13,54 @@ from django.utils.text import slugify
 class Category(models.Model):
     """
     Article category for classification and filtering.
-    
+
     Categories group articles by topic (e.g., AI, Technology, Science).
     Used for filtering, recommendations, and user preferences.
-    
+
     Attributes:
         name (CharField): Category name (unique)
         slug (SlugField): URL-friendly version of name
         description (TextField): Detailed category description
         created_at (DateTimeField): Category creation timestamp
     """
-    
+
     name = models.CharField(
         max_length=100,
         unique=True,
-        help_text="Category name (e.g., 'Artificial Intelligence')"
+        help_text="Category name (e.g., 'Artificial Intelligence')",
     )
-    
+
     slug = models.SlugField(
         max_length=100,
         unique=True,
         blank=True,
-        help_text="URL-friendly version of name"
+        help_text="URL-friendly version of name",
     )
-    
+
     description = models.TextField(
-        blank=True,
-        help_text="Detailed description of what this category covers"
+        blank=True, help_text="Detailed description of what this category covers"
     )
-    
+
     created_at = models.DateTimeField(
-        auto_now_add=True,
-        help_text="Timestamp when category was created"
+        auto_now_add=True, help_text="Timestamp when category was created"
     )
-    
+
     class Meta:
         """Meta options for Category model."""
-        
-        verbose_name_plural = 'Categories'
-        ordering = ['name']
-    
+
+        verbose_name_plural = "Categories"
+        ordering = ["name"]
+
     def save(self, *args, **kwargs):
         """Auto-generate slug from name if not provided."""
         if not self.slug:
             self.slug = slugify(self.name)
         super().save(*args, **kwargs)
-    
+
     def __str__(self):
         """
         Return string representation of category.
-        
+
         Returns:
             str: Category name
         """
@@ -79,43 +77,37 @@ class Source(models.Model):
     name = models.CharField(
         max_length=100,
         unique=True,
-        help_text="Source name (e.g., TechCrunch, The Verge)"
+        help_text="Source name (e.g., TechCrunch, The Verge)",
     )
 
-    website_url = models.URLField(
-        help_text="Main website URL"
-    )
+    website_url = models.URLField(help_text="Main website URL")
 
     rss_feed_url = models.URLField(
-        blank=True,
-        null=True,
-        help_text="RSS feed URL for automatic article fetching"
+        blank=True, null=True, help_text="RSS feed URL for automatic article fetching"
     )
 
     is_active = models.BooleanField(
-        default=True,
-        help_text="Whether to fetch articles from this source"
+        default=True, help_text="Whether to fetch articles from this source"
     )
 
     fetch_frequency = models.IntegerField(
-        default=60,
-        help_text="How often to fetch (in minutes)"
+        default=60, help_text="How often to fetch (in minutes)"
     )
 
     last_fetched = models.DateTimeField(
         null=True,
         blank=True,
-        help_text="Last time articles were fetched from this source"
+        help_text="Last time articles were fetched from this source",
     )
 
     created_at = models.DateTimeField(
-        auto_now_add=True,
-        help_text="Timestamp when source was added"
+        auto_now_add=True, help_text="Timestamp when source was added"
     )
 
     class Meta:
         """Meta options for Source model."""
-        ordering = ['name']
+
+        ordering = ["name"]
 
     def __str__(self):
         """Return source name."""
@@ -144,8 +136,9 @@ class Source(models.Model):
         Returns:
             tuple: (articles_created_count, articles_updated_count, error_message)
         """
-        import feedparser
         from datetime import datetime
+
+        import feedparser
 
         if not self.rss_feed_url:
             return 0, 0, "No RSS feed URL configured"
@@ -165,26 +158,26 @@ class Source(models.Model):
             # Process each entry in the feed
             for entry in feed.entries:
                 # Extract article data
-                title = entry.get('title', 'No Title')
-                url = entry.get('link', '')
-                summary = entry.get('summary', entry.get('description', ''))
-                author = entry.get('author', '')
+                title = entry.get("title", "No Title")
+                url = entry.get("link", "")
+                summary = entry.get("summary", entry.get("description", ""))
+                author = entry.get("author", "")
 
                 # Get published date
                 published_at = None
-                if hasattr(entry, 'published_parsed') and entry.published_parsed:
+                if hasattr(entry, "published_parsed") and entry.published_parsed:
                     published_at = datetime(*entry.published_parsed[:6])
-                elif hasattr(entry, 'updated_parsed') and entry.updated_parsed:
+                elif hasattr(entry, "updated_parsed") and entry.updated_parsed:
                     published_at = datetime(*entry.updated_parsed[:6])
 
                 # Get image URL
-                image_url = ''
-                if hasattr(entry, 'media_content') and entry.media_content:
-                    image_url = entry.media_content[0].get('url', '')
-                elif hasattr(entry, 'links'):
+                image_url = ""
+                if hasattr(entry, "media_content") and entry.media_content:
+                    image_url = entry.media_content[0].get("url", "")
+                elif hasattr(entry, "links"):
                     for link in entry.links:
-                        if link.get('type', '').startswith('image/'):
-                            image_url = link.get('href', '')
+                        if link.get("type", "").startswith("image/"):
+                            image_url = link.get("href", "")
                             break
 
                 # Skip if no URL
@@ -195,14 +188,14 @@ class Source(models.Model):
                 article, created = Article.objects.update_or_create(
                     url=url,
                     defaults={
-                        'title': title[:500],  # Truncate to max length
-                        'summary': summary,
-                        'content': summary,  # Use summary as content for now
-                        'author': author[:200] if author else '',
-                        'source': self,
-                        'image_url': image_url,
-                        'published_at': published_at or timezone.now(),
-                    }
+                        "title": title[:500],  # Truncate to max length
+                        "summary": summary,
+                        "content": summary,  # Use summary as content for now
+                        "author": author[:200] if author else "",
+                        "source": self,
+                        "image_url": image_url,
+                        "published_at": published_at or timezone.now(),
+                    },
                 )
 
                 if created:
@@ -253,116 +246,95 @@ class Article(models.Model):
     """
 
     STATE_CHOICES = [
-        ('fresh', 'Fresh (0-7 days)'),
-        ('active', 'Active (7-30 days)'),
-        ('archived', 'Archived (30+ days)'),
+        ("fresh", "Fresh (0-7 days)"),
+        ("active", "Active (7-30 days)"),
+        ("archived", "Archived (30+ days)"),
     ]
 
-    title = models.CharField(
-        max_length=500,
-        help_text="Article headline"
-    )
+    title = models.CharField(max_length=500, help_text="Article headline")
 
     slug = models.SlugField(
         max_length=500,
         unique=True,
         blank=True,
-        help_text="URL-friendly version of title"
+        help_text="URL-friendly version of title",
     )
 
-    content = models.TextField(
-        help_text="Full article content"
-    )
+    content = models.TextField(help_text="Full article content")
 
-    summary = models.TextField(
-        blank=True,
-        help_text="Short summary or excerpt"
-    )
+    summary = models.TextField(blank=True, help_text="Short summary or excerpt")
 
     url = models.URLField(
-        unique=True,
-        max_length=1000,
-        help_text="Original article URL (must be unique)"
+        unique=True, max_length=1000, help_text="Original article URL (must be unique)"
     )
 
     author = models.CharField(
-        max_length=200,
-        blank=True,
-        help_text="Article author name"
+        max_length=200, blank=True, help_text="Article author name"
     )
-    
+
     source = models.ForeignKey(
         Source,
         on_delete=models.CASCADE,
-        related_name='articles',
-        help_text="RSS source this article came from"
+        related_name="articles",
+        help_text="RSS source this article came from",
     )
-    
+
     category = models.ForeignKey(
         Category,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='articles',
-        help_text="Article category (optional)"
+        related_name="articles",
+        help_text="Article category (optional)",
     )
-    
+
     image_url = models.URLField(
-        max_length=1000,
-        blank=True,
-        help_text="Featured image URL"
+        max_length=1000, blank=True, help_text="Featured image URL"
     )
 
     published_at = models.DateTimeField(
-        default=timezone.now,
-        help_text="Original publication date"
+        default=timezone.now, help_text="Original publication date"
     )
 
     fetched_at = models.DateTimeField(
-        auto_now_add=True,
-        help_text="Timestamp when article was fetched"
+        auto_now_add=True, help_text="Timestamp when article was fetched"
     )
 
     updated_at = models.DateTimeField(
-        auto_now=True,
-        help_text="Timestamp of last update"
+        auto_now=True, help_text="Timestamp of last update"
     )
 
     state = models.CharField(
         max_length=20,
         choices=STATE_CHOICES,
-        default='fresh',
-        help_text="Article lifecycle state"
+        default="fresh",
+        help_text="Article lifecycle state",
     )
 
     archived_at = models.DateTimeField(
-        null=True,
-        blank=True,
-        help_text="Timestamp when article was archived"
+        null=True, blank=True, help_text="Timestamp when article was archived"
     )
 
     view_count = models.IntegerField(
-        default=0,
-        help_text="Number of times article was viewed"
+        default=0, help_text="Number of times article was viewed"
     )
 
     bookmark_count = models.IntegerField(
-        default=0,
-        help_text="Number of users who bookmarked this article"
+        default=0, help_text="Number of users who bookmarked this article"
     )
 
     class Meta:
         """Meta options for Article model."""
 
-        ordering = ['-published_at']
+        ordering = ["-published_at"]
         indexes = [
-            models.Index(fields=['-published_at']),
-            models.Index(fields=['category']),
-            models.Index(fields=['source']),
-            models.Index(fields=['state']),
-            models.Index(fields=['published_at', 'state']),
+            models.Index(fields=["-published_at"]),
+            models.Index(fields=["category"]),
+            models.Index(fields=["source"]),
+            models.Index(fields=["state"]),
+            models.Index(fields=["published_at", "state"]),
         ]
-    
+
     def save(self, *args, **kwargs):
         """Auto-generate slug from title if not provided."""
         if not self.slug:
@@ -381,8 +353,6 @@ class Article(models.Model):
 
     def update_state(self):
         """Update article state based on age and engagement."""
-        from datetime import timedelta
-
         # Don't change state if bookmarked or read by anyone
         if self.bookmark_count > 0:
             return
@@ -390,21 +360,21 @@ class Article(models.Model):
         age = timezone.now() - self.published_at
 
         if age.days < 7:
-            self.state = 'fresh'
+            self.state = "fresh"
         elif age.days < 30:
-            self.state = 'active'
+            self.state = "active"
         else:
-            self.state = 'archived'
+            self.state = "archived"
             if not self.archived_at:
                 self.archived_at = timezone.now()
 
     def is_fresh(self):
         """Check if article is fresh (0-7 days old)."""
-        return self.state == 'fresh'
+        return self.state == "fresh"
 
     def is_archived(self):
         """Check if article is archived."""
-        return self.state == 'archived'
+        return self.state == "archived"
 
     def age_in_days(self):
         """Get article age in days."""
@@ -413,57 +383,58 @@ class Article(models.Model):
     def __str__(self):
         """
         Return string representation of article.
-        
+
         Returns:
             str: Article title
         """
         return self.title
-    
+
     def increment_views(self):
         """
         Increment article view count by 1.
-        
+
         Called when user opens article. Updates only view_count field
         for performance (avoids updating all fields).
         """
         self.view_count += 1
-        self.save(update_fields=['view_count'])
+        self.save(update_fields=["view_count"])
+
 
 class Bookmark(models.Model):
     """Links users to articles they want to save for later reading.
-    
+
     Ensures each user can only bookmark an article once using unique_together.
     Bookmarks are ordered by creation date (newest first).
     """
-    
+
     user = models.ForeignKey(
-        'users.CustomUser',
+        "users.CustomUser",
         on_delete=models.CASCADE,
-        related_name='bookmarks',  # Enables: user.bookmarks.all()
-        help_text="User who created this bookmark"
+        related_name="bookmarks",  # Enables: user.bookmarks.all()
+        help_text="User who created this bookmark",
     )
-    
+
     article = models.ForeignKey(
-        'Article',
+        "Article",
         on_delete=models.CASCADE,
-        related_name='bookmarked_by',  # Enables: article.bookmarked_by.count()
-        help_text="Article being bookmarked"
+        related_name="bookmarked_by",  # Enables: article.bookmarked_by.count()
+        help_text="Article being bookmarked",
     )
-    
+
     created_at = models.DateTimeField(
-        auto_now_add=True,
-        help_text="When bookmark was created"
+        auto_now_add=True, help_text="When bookmark was created"
     )
 
     class Meta:
-        # Prevents duplicate bookmarks at database level (better than app-level checks for race conditions)
-        unique_together = ('user', 'article')
-        
-        ordering = ['-created_at']
-        
+        # Prevents duplicate bookmarks at database level
+        # (better than app-level checks for race conditions)
+        unique_together = ("user", "article")
+
+        ordering = ["-created_at"]
+
         # Optimizes common query: user.bookmarks.all().order_by('-created_at')
         indexes = [
-            models.Index(fields=['user', '-created_at']),
+            models.Index(fields=["user", "-created_at"]),
         ]
 
     def __str__(self):

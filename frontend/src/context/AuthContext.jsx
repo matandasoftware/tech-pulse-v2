@@ -15,10 +15,6 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        checkAuth();
-    }, []);
-
     const checkAuth = async () => {
         const token = localStorage.getItem('token');
         const storedUser = localStorage.getItem('user');
@@ -34,6 +30,10 @@ export const AuthProvider = ({ children }) => {
         }
         setLoading(false);
     };
+
+    useEffect(() => {
+        checkAuth();
+    }, []);
 
     const login = (userData) => {
         // Just update the user state - LoginPage already did the API call

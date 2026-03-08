@@ -6,13 +6,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('interactions', '0004_note_is_reviewed_note_interaction_is_revi_febf18_idx'),
+        ("interactions", "0004_note_is_reviewed_note_interaction_is_revi_febf18_idx"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='note',
-            name='external_link',
-            field=models.URLField(blank=True, help_text='Single external reference URL', max_length=500, null=True),
+            model_name="note",
+            name="external_link",
+            field=models.URLField(
+                blank=True,
+                help_text="Single external reference URL",
+                max_length=500,
+                null=True,
+            ),
         ),
     ]

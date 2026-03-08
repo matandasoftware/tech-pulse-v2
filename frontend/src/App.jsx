@@ -6,6 +6,7 @@
  */
 
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
 import { DarkModeProvider } from './context/DarkModeContext';
 import { NotesPanelProvider } from './context/NotesPanelContext';
@@ -18,6 +19,7 @@ import RegisterPage from './pages/RegisterPage';
 import BookmarksPage from './pages/BookmarksPage';
 import NotesPage from './pages/NotesPage';
 import ProfilePage from './pages/ProfilePage';
+import AnalyticsPage from './pages/AnalyticsPage';
 
 function App() {
     return (
@@ -27,6 +29,21 @@ function App() {
                 <NotesPanelProvider>
                     <Router>
                         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+                            {/* Toast notifications */}
+                            <Toaster
+                                position="top-right"
+                                reverseOrder={false}
+                                gutter={8}
+                                toastOptions={{
+                                    duration: 4000,
+                                    style: {
+                                        borderRadius: '10px',
+                                        background: '#333',
+                                        color: '#fff',
+                                    },
+                                }}
+                            />
+
                             <Routes>
 
                                 {/* Public Routes */}
@@ -91,6 +108,19 @@ function App() {
                                             <>
                                                 <Navbar />
                                                 <ProfilePage />
+                                            </>
+                                        </ProtectedRoute>
+                                    }
+                                />
+
+                                {/* Analytics */}
+                                <Route
+                                    path="/analytics"
+                                    element={
+                                        <ProtectedRoute>
+                                            <>
+                                                <Navbar />
+                                                <AnalyticsPage />
                                             </>
                                         </ProtectedRoute>
                                     }

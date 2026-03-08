@@ -14,6 +14,7 @@
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { useNotesPanel } from '../context/NotesPanelContext';
+import { showSuccess, handleApiError } from '../utils/toast';
 import api from '../services/api';
 
 function ArticleCard({ article, onBookmarkChange }) {
@@ -77,15 +78,18 @@ function ArticleCard({ article, onBookmarkChange }) {
         setIsBookmarked(newBookmarkState);
 
         try {
-            console.log('📌 Bookmarking article:', article.id, 'New state:', newBookmarkState);
-
             // Create or update UserArticle record
-            const response = await api.post('/user-articles/', {
+            await api.post('/user-articles/', {
                 article_id: article.id,
                 is_bookmarked: newBookmarkState,
             });
 
-            console.log('✅ Bookmark response:', response.data);
+            // Show success toast
+            if (newBookmarkState) {
+                showSuccess.bookmark();
+            } else {
+                showSuccess.unbookmark();
+            }
 
             // Dispatch global event to update bookmark pages
             window.dispatchEvent(new CustomEvent('bookmarkUpdated', {
@@ -97,19 +101,9 @@ function ArticleCard({ article, onBookmarkChange }) {
                 onBookmarkChange(article.id, newBookmarkState);
             }
         } catch (err) {
-            console.error('❌ Error toggling bookmark:', err);
-            console.error('❌ Error response:', err.response?.data);
-            console.error('❌ Error status:', err.response?.status);
-
-            // Revert on error
+            // Revert optimistic update
             setIsBookmarked(!newBookmarkState);
-
-            const errorMsg = err.response?.data?.detail
-                || err.response?.data?.article_id
-                || err.response?.data?.error
-                || err.message
-                || 'Failed to update bookmark';
-            alert('Bookmark error: ' + errorMsg);
+            handleApiError(err, 'Failed to update bookmark');
         } finally {
             setBookmarking(false);
         }
@@ -134,13 +128,6 @@ function ArticleCard({ article, onBookmarkChange }) {
         } catch {
             return dateString;
         }
-    };
-
-    /**
-     * Handle notes count update from NotesPanel
-     */
-    const handleNotesUpdate = (newCount) => {
-        setNotesCount(newCount);
     };
 
     // Listen for notes updates

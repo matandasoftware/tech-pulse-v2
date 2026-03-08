@@ -10,68 +10,109 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('articles', '0001_initial'),
-        ('interactions', '0001_initial'),
+        ("articles", "0001_initial"),
+        ("interactions", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='note',
-            name='user',
-            field=models.ForeignKey(help_text='User who wrote this note', on_delete=django.db.models.deletion.CASCADE, related_name='notes', to=settings.AUTH_USER_MODEL),
+            model_name="note",
+            name="user",
+            field=models.ForeignKey(
+                help_text="User who wrote this note",
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="notes",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
         migrations.AddField(
-            model_name='articlereference',
-            name='source_note',
-            field=models.ForeignKey(help_text='Note that contains this reference', on_delete=django.db.models.deletion.CASCADE, related_name='references', to='interactions.note'),
+            model_name="articlereference",
+            name="source_note",
+            field=models.ForeignKey(
+                help_text="Note that contains this reference",
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="references",
+                to="interactions.note",
+            ),
         ),
         migrations.AddField(
-            model_name='readinghistory',
-            name='article',
-            field=models.ForeignKey(help_text='Article that was read', on_delete=django.db.models.deletion.CASCADE, related_name='read_by', to='articles.article'),
+            model_name="readinghistory",
+            name="article",
+            field=models.ForeignKey(
+                help_text="Article that was read",
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="read_by",
+                to="articles.article",
+            ),
         ),
         migrations.AddField(
-            model_name='readinghistory',
-            name='user',
-            field=models.ForeignKey(help_text='User who read the article', on_delete=django.db.models.deletion.CASCADE, related_name='reading_history', to=settings.AUTH_USER_MODEL),
+            model_name="readinghistory",
+            name="user",
+            field=models.ForeignKey(
+                help_text="User who read the article",
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="reading_history",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
         migrations.AddField(
-            model_name='userarticle',
-            name='article',
-            field=models.ForeignKey(help_text='Article that was interacted with', on_delete=django.db.models.deletion.CASCADE, related_name='user_interactions', to='articles.article'),
+            model_name="userarticle",
+            name="article",
+            field=models.ForeignKey(
+                help_text="Article that was interacted with",
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="user_interactions",
+                to="articles.article",
+            ),
         ),
         migrations.AddField(
-            model_name='userarticle',
-            name='user',
-            field=models.ForeignKey(help_text='User who interacted with the article', on_delete=django.db.models.deletion.CASCADE, related_name='article_interactions', to=settings.AUTH_USER_MODEL),
+            model_name="userarticle",
+            name="user",
+            field=models.ForeignKey(
+                help_text="User who interacted with the article",
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="article_interactions",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
         migrations.AddIndex(
-            model_name='note',
-            index=models.Index(fields=['user', 'article'], name='interaction_user_id_290c69_idx'),
+            model_name="note",
+            index=models.Index(
+                fields=["user", "article"], name="interaction_user_id_290c69_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='note',
-            index=models.Index(fields=['has_follow_up', 'follow_up_done'], name='interaction_has_fol_224ca2_idx'),
+            model_name="note",
+            index=models.Index(
+                fields=["has_follow_up", "follow_up_done"],
+                name="interaction_has_fol_224ca2_idx",
+            ),
         ),
         migrations.AlterUniqueTogether(
-            name='articlereference',
-            unique_together={('source_note', 'referenced_article')},
+            name="articlereference",
+            unique_together={("source_note", "referenced_article")},
         ),
         migrations.AddIndex(
-            model_name='readinghistory',
-            index=models.Index(fields=['user', '-read_at'], name='interaction_user_id_4360b1_idx'),
+            model_name="readinghistory",
+            index=models.Index(
+                fields=["user", "-read_at"], name="interaction_user_id_4360b1_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='userarticle',
-            index=models.Index(fields=['user', 'is_bookmarked'], name='interaction_user_id_92105d_idx'),
+            model_name="userarticle",
+            index=models.Index(
+                fields=["user", "is_bookmarked"], name="interaction_user_id_92105d_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='userarticle',
-            index=models.Index(fields=['user', 'is_read'], name='interaction_user_id_7a8c86_idx'),
+            model_name="userarticle",
+            index=models.Index(
+                fields=["user", "is_read"], name="interaction_user_id_7a8c86_idx"
+            ),
         ),
         migrations.AlterUniqueTogether(
-            name='userarticle',
-            unique_together={('user', 'article')},
+            name="userarticle",
+            unique_together={("user", "article")},
         ),
     ]

@@ -6,26 +6,39 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('articles', '0005_remove_source_description_and_more'),
+        ("articles", "0005_remove_source_description_and_more"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='article',
-            name='archived_at',
-            field=models.DateTimeField(blank=True, help_text='Timestamp when article was archived', null=True),
+            model_name="article",
+            name="archived_at",
+            field=models.DateTimeField(
+                blank=True, help_text="Timestamp when article was archived", null=True
+            ),
         ),
         migrations.AddField(
-            model_name='article',
-            name='state',
-            field=models.CharField(choices=[('fresh', 'Fresh (0-7 days)'), ('active', 'Active (7-30 days)'), ('archived', 'Archived (30+ days)')], default='fresh', help_text='Article lifecycle state', max_length=20),
+            model_name="article",
+            name="state",
+            field=models.CharField(
+                choices=[
+                    ("fresh", "Fresh (0-7 days)"),
+                    ("active", "Active (7-30 days)"),
+                    ("archived", "Archived (30+ days)"),
+                ],
+                default="fresh",
+                help_text="Article lifecycle state",
+                max_length=20,
+            ),
         ),
         migrations.AddIndex(
-            model_name='article',
-            index=models.Index(fields=['state'], name='articles_ar_state_6b6a76_idx'),
+            model_name="article",
+            index=models.Index(fields=["state"], name="articles_ar_state_6b6a76_idx"),
         ),
         migrations.AddIndex(
-            model_name='article',
-            index=models.Index(fields=['published_at', 'state'], name='articles_ar_publish_fbbf35_idx'),
+            model_name="article",
+            index=models.Index(
+                fields=["published_at", "state"], name="articles_ar_publish_fbbf35_idx"
+            ),
         ),
     ]
