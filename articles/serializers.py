@@ -32,26 +32,25 @@ class CategorySerializer(serializers.ModelSerializer):
 
 class SourceSerializer(serializers.ModelSerializer):
     """Serializer for Source model."""
-    
+
     # Computed field showing how many articles are from this source
     article_count = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = Source
         fields = [
             'id',
             'name',
-            'url',
-            'source_type',
-            'description',
+            'website_url',
+            'rss_feed_url',
             'is_active',
-            'fetch_interval',
+            'fetch_frequency',
             'last_fetched',
             'article_count',
             'created_at'
         ]
         read_only_fields = ['id', 'last_fetched', 'created_at']
-    
+
     def get_article_count(self, obj):
         """Return count of articles from this source."""
         return obj.articles.count()
@@ -92,12 +91,16 @@ class ArticleListSerializer(serializers.ModelSerializer):
             'view_count',
             'bookmark_count',
             'is_bookmarked',
+            'state',
+            'archived_at',
         ]
         read_only_fields = [
             'id',
             'view_count',
             'bookmark_count',
             'published_at',
+            'state',
+            'archived_at',
         ]
     
     def get_is_bookmarked(self, obj):
@@ -145,12 +148,16 @@ class ArticleDetailSerializer(serializers.ModelSerializer):
             'view_count',
             'bookmark_count',
             'is_bookmarked',
+            'state',
+            'archived_at',
         ]
         read_only_fields = [
             'id',
             'view_count',
             'bookmark_count',
             'published_at',
+            'state',
+            'archived_at',
         ]
     
     def get_is_bookmarked(self, obj):

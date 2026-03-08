@@ -9,6 +9,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
+from django.db import models
 from .models import Category, Source, Article, Bookmark
 from .serializers import (
     CategorySerializer,
@@ -85,30 +86,67 @@ class SourceDetailView(generics.RetrieveUpdateDestroyAPIView):
 class ArticleListView(generics.ListCreateAPIView):
     """
     List all articles or create new article.
-    
+
     GET /api/articles/
     POST /api/articles/
-    
+
     Filters:
     - ?category=1
     - ?source=1
+    - ?state=fresh|active|archived
     - ?search=keyword
     - ?ordering=-published_at
+
+    Smart Feed Prioritization:
+    - Fresh articles (0-7 days) shown first
+    - Then active articles (7-30 days)
+    - Archived articles (30+ days) excluded by default
     """
-    
-    # select_related prevents N+1 queries by joining source and category tables
-    queryset = Article.objects.select_related('source', 'category').all()
+
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     filter_backends = [
         DjangoFilterBackend,
         filters.SearchFilter,
         filters.OrderingFilter
     ]
-    filterset_fields = ['category', 'source']
+    filterset_fields = ['category', 'source', 'state']
     search_fields = ['title', 'content', 'summary', 'author']
     ordering_fields = ['published_at', 'view_count', 'bookmark_count']
-    ordering = ['-published_at']
-    
+
+    def get_queryset(self):
+        """
+        Get articles with smart filtering.
+
+        By default:
+        - Excludes archived articles (30+ days old)
+        - Orders by: fresh first, then active, then by date
+        """
+        queryset = Article.objects.select_related('source', 'category')
+
+        # Get state filter from query params
+        state_filter = self.request.query_params.get('state', None)
+
+        if state_filter:
+            # User explicitly filtering by state
+            queryset = queryset.filter(state=state_filter)
+        else:
+            # Default: exclude archived articles for clean feed
+            queryset = queryset.exclude(state='archived')
+
+        # Smart prioritization: fresh first, then active, then by date
+        queryset = queryset.order_by(
+            models.Case(
+                models.When(state='fresh', then=0),
+                models.When(state='active', then=1),
+                models.When(state='archived', then=2),
+                default=3,
+                output_field=models.IntegerField(),
+            ),
+            '-published_at'
+        )
+
+        return queryset
+
     def get_serializer_class(self):
         """Use different serializers for list vs create."""
         if self.request.method == 'POST':

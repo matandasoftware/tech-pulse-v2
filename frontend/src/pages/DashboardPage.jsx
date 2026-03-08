@@ -115,6 +115,26 @@ function DashboardPage() {
                     {/* Main Stats Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 
+                        {/* Total Articles - NEW */}
+                        <Link
+                            to="/"
+                            className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 hover:shadow-xl transition-shadow border-l-4 border-gray-500"
+                        >
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-3xl font-bold text-gray-600 dark:text-gray-400">
+                                        {stats?.counts?.total_articles || 0}
+                                    </p>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 font-medium">
+                                        📰 Total Articles
+                                    </p>
+                                </div>
+                                <div className="w-12 h-12 bg-gray-100 dark:bg-gray-900/30 rounded-full flex items-center justify-center">
+                                    <span className="text-2xl">📰</span>
+                                </div>
+                            </div>
+                        </Link>
+
                         {/* Bookmarks */}
                         <Link
                             to="/bookmarks"
@@ -136,7 +156,10 @@ function DashboardPage() {
                         </Link>
 
                         {/* Notes */}
-                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border-l-4 border-green-500">
+                        <Link
+                            to="/notes"
+                            className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 hover:shadow-xl transition-shadow border-l-4 border-green-500"
+                        >
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-3xl font-bold text-green-600 dark:text-green-400">
@@ -150,27 +173,13 @@ function DashboardPage() {
                                     <span className="text-2xl">📝</span>
                                 </div>
                             </div>
-                        </div>
-
-                        {/* Articles Read */}
-                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border-l-4 border-purple-500">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-3xl font-bold text-purple-600 dark:text-purple-400">
-                                        {stats?.counts?.total_articles || 0}
-                                    </p>
-                                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 font-medium">
-                                        📖 Articles Read
-                                    </p>
-                                </div>
-                                <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center">
-                                    <span className="text-2xl">📖</span>
-                                </div>
-                            </div>
-                        </div>
+                        </Link>
 
                         {/* Reading Time */}
-                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border-l-4 border-yellow-500">
+                        <Link
+                            to="/profile"
+                            className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 hover:shadow-xl transition-shadow border-l-4 border-yellow-500"
+                        >
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-3xl font-bold text-yellow-600 dark:text-yellow-400">
@@ -184,10 +193,13 @@ function DashboardPage() {
                                     <span className="text-2xl">⏱️</span>
                                 </div>
                             </div>
-                        </div>
+                        </Link>
 
                         {/* PENDING FOLLOW-UPS WITH BREAKDOWN INSIDE */}
-                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border-l-4 border-orange-500">
+                        <Link
+                            to="/notes?filter=pending-followups"
+                            className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 hover:shadow-xl transition-shadow border-l-4 border-orange-500"
+                        >
                             <div className="flex items-center justify-between mb-4">
                                 <div>
                                     <p className="text-3xl font-bold text-orange-600 dark:text-orange-400">
@@ -231,7 +243,7 @@ function DashboardPage() {
                                     </div>
                                 </div>
                             )}
-                        </div>
+                        </Link>
 
                     </div>
 

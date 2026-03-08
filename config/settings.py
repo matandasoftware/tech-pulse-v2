@@ -40,7 +40,6 @@ INSTALLED_APPS = [
 
     'rest_framework', # Add Django REST Framework for building APIs
     'rest_framework.authtoken', # Add Token authentication
-    'rest_framework_simplejwt', # Add Simple JWT for handling JWT authentication
     'corsheaders', # Add CORS headers to allow cross-origin requests from the frontend
     'django_filters', # Add Django Filters for filtering querysets in the API
 
@@ -133,34 +132,25 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-from datetime import timedelta
-
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework.authentication.TokenAuthentication', # Use Token for authentication
-    ),
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',  # ✅ Token auth
+    ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticatedOrReadOnly',     # Allow read-only access for unauthenticated users
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10, # Set a default page size for pagination
+    'PAGE_SIZE': 10,
     'DEFAULT_FILTER_BACKENDS': [
-        'rest_framework.filters.SearchFilter', # Enable search functionality
-        'rest_framework.filters.OrderingFilter', # Enable ordering functionality
+        'django_filters.rest_framework.DjangoFilterBackend',
+        'rest_framework.filters.SearchFilter',
+        'rest_framework.filters.OrderingFilter',
     ],
-}
-
-SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1), # Set access token lifetime to 1 hour
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7), # Set refresh token lifetime to 7 days
-    'ROTATE_REFRESH_TOKENS': True,
-    'BLACKLIST_AFTER_ROTATION': True,
-    'AUTH_HEADER_TYPES': ('Bearer',), 
 }
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000", # Allow requests from localhost:3000 (React development server)
-    "http://localhost:5173", # Allow requests from localhost:5173 (Vite development server)
+    "http://localhost:3000",
+    "http://localhost:5173",
     "http://127.0.0.1:3000",  
     "http://127.0.0.1:5173", 
 ]

@@ -24,26 +24,25 @@ class CategoryAdmin(admin.ModelAdmin):
 @admin.register(Source)
 class SourceAdmin(admin.ModelAdmin):
     """Admin interface for Source model."""
-    
+
     list_display = [
         'name',
-        'source_type',
         'is_active',
-        'fetch_interval',
+        'fetch_frequency',
         'last_fetched',
         'article_count'
     ]
-    
-    list_filter = ['source_type', 'is_active']
-    search_fields = ['name', 'url', 'description']
+
+    list_filter = ['is_active']
+    search_fields = ['name', 'website_url', 'rss_feed_url']
     readonly_fields = ['created_at', 'last_fetched']
-    
+
     fieldsets = [
         ('Basic Information', {
-            'fields': ('name', 'url', 'source_type', 'description')
+            'fields': ('name', 'website_url', 'rss_feed_url')
         }),
         ('Fetch Configuration', {
-            'fields': ('is_active', 'fetch_interval', 'last_fetched')
+            'fields': ('is_active', 'fetch_frequency', 'last_fetched')
         }),
         ('Metadata', {
             'fields': ('created_at',)
