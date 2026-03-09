@@ -264,3 +264,7 @@ htmlcov/
 # */migrations/*.py
 # */migrations/*.pyc
 # !*/migrations/__init__.py
+
+# Docker environment
+.env
+
