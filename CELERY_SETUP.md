@@ -129,7 +129,7 @@ print(result.get())  # Returns status of the archive operation
 Watch the Celery worker terminal for real-time logs:
 ```
 [2024-03-08 02:00:00] INFO: Starting scheduled article fetch...
-[2024-03-08 02:00:15] INFO: ✅ Scheduled article fetch completed successfully
+[2024-03-08 02:00:15] INFO: Scheduled article fetch completed successfully
 ```
 
 ## Customization

@@ -166,4 +166,4 @@ python -m pytest -v --cov=. --cov-report=term-missing
 python -m pytest --cov=. --cov-report=html
 ```
 
-✅ If all show `35 passed`, you're good to go!
+If all tests pass (35 passed), the test suite is working correctly.
