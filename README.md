@@ -630,6 +630,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 For issues, questions, or suggestions:
 - **Issues**: [GitHub Issues](https://github.com/matandasoftware/tech-pulse-v2/issues)
+- **Email**: pfarelochannel@gmail.com
 - **Developer**: Pfarelo Channel Mudau
 - **GitHub**: [@matandasoftware](https://github.com/matandasoftware)
 - **Portfolio**: [MyCv](https://github.com/matandasoftware/MyCv)
