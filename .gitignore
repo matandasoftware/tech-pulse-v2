@@ -199,6 +199,10 @@ cython_debug/
 # Ruff stuff:
 .ruff_cache/
 
+# Exclude subdirectory README files (keep main README.md only)
+frontend/README.md
+staticfiles/admin/img/README.txt
+
 # PyPI configuration file
 .pypirc
 
