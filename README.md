@@ -160,6 +160,47 @@ Tech Pulse is an intelligent news aggregation platform that automatically fetche
 
 ---
 
+## 🗃 SQL (PostgreSQL) → MongoDB (Migration Notes)
+
+Tech Pulse v2 currently uses PostgreSQL (relational). If migrating to MongoDB (document database), the biggest change is **data modeling and query strategy** (not the UI or the API shape).
+
+### Relational → Document mindset
+- In SQL, we normalize data and rely on joins.
+- In MongoDB, we design documents around **access patterns**:
+  - **Embed** small, bounded data that is read together
+  - **Reference** data that can grow large/unbounded or is shared widely
+
+### Suggested MongoDB collections (based on this project)
+This mapping keeps the same feature set without creating unbounded arrays:
+
+- `users` — user profile/preferences
+- `articles` — articles with `source_id`, `category_id`, `published_at`
+- `sources` — feed configuration
+- `categories` — topic categories
+- `user_articles` — one document per `(user_id, article_id)` for interactions (bookmark/read/save-later/keep-delete + timestamps)
+- `notes` — user notes on articles (indexed by `user_id`, `article_id`, `created_at`)
+
+### Query + index translation examples
+- "My bookmarked articles"
+  - Query `user_articles` by `user_id` + `is_bookmarked=true`
+  - Index: `(user_id, is_bookmarked)`
+- "Latest articles in a category"
+  - Query `articles` by `category_id`, sort by `published_at desc`
+  - Index: `(category_id, published_at)`
+
+### What stays the same
+- Frontend integration (Axios → API endpoints) stays the same.
+- Celery background jobs still run; only DB reads/writes change.
+- API contracts can remain stable if you keep response schemas consistent.
+
+### What must be revisited
+- Relational constraints (FKs/unique constraints) move to:
+  - MongoDB unique indexes + application-level validation
+- Full-text search:
+  - MongoDB text index (basic) or external search (advanced).
+
+---
+
 ## 🚀 Getting Started
 
 ### Prerequisites
@@ -504,35 +545,6 @@ npm run test:watch
 ---
 
 ## 🚢 Deployment
-
-### Docker Production Deployment
-
-1. **Update environment variables** for production in `.env`
-2. **Build production images:**
-
-```bash
-docker-compose -f docker-compose.prod.yml build
-```
-
-3. **Run migrations:**
-
-```bash
-docker-compose -f docker-compose.prod.yml run web python manage.py migrate
-```
-
-4. **Collect static files:**
-
-```bash
-docker-compose -f docker-compose.prod.yml run web python manage.py collectstatic --noinput
-```
-
-5. **Start services:**
-
-```bash
-docker-compose -f docker-compose.prod.yml up -d
-```
-
-### Manual Deployment
 
 **Backend (Django):**
 
